@@ -109,7 +109,7 @@ class Win {
     emit("wm");
   }
 
-  toggleMax() { this.state = this.state === "normal" ? "max" : "normal"; this.apply(true); this.remember(); }
+  toggleMax() { this.state = this.state === "max" ? "normal" : "max"; this.apply(true); this.remember(); }
 
   /** Asks the window to close. What it holds may refuse (an application with unsaved work). */
   close() { if (this.onClose() !== false) this.destroy(); }
