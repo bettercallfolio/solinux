@@ -61,9 +61,12 @@ const size = (n: number): string => (n >= 1e9 ? `${(n / 1e9).toFixed(1)} GB` : n
 
 // ---------------------------------------------------------------- the repository
 
+interface Ref { sig: string; size: number; sha256: string }
 interface Package {
   version: string; summary: string; file: string; size: number; installed: number; sha256: string;
   deps: string[]; set: string; app?: { name: string; icon: string; comment: string };
+  /** Where the archive is on chain (repositories on chain only). */
+  ref?: Ref;
 }
 interface Index { format: number; name: string; updated: string; packages: Record<string, Package> }
 
@@ -78,9 +81,66 @@ function repoAddress(): string {
 }
 
 const isUrl = (s: string): boolean => /^https?:\/\//.test(s);
+const isChain = (s: string): boolean => s.startsWith("chain:");
+
+function setting(key: string): string | null {
+  try { return fs.readFileSync(CONF, "utf8").match(new RegExp(`^\\s*${key}\\s*=\\s*(\\S+)`, "m"))?.[1] ?? null; } catch { return null; }
+}
+
+// ---- a repository on chain: the index and every archive are files stored with chainboot.
+// A pointer that only the publisher's key can move names the newest index. Everything read
+// is checked against the publisher's signature and the SHA-256 the index gives.
+
+interface Chain { store: any; publisher: Uint8Array; cache: string; index: Ref }
+let chainOpen: Promise<Chain> | null = null;
+
+function rpcEndpoints(network: string): string[] {
+  if (process.env.CHAINBOOT_RPC) return process.env.CHAINBOOT_RPC.split(",").map((u) => u.trim()).filter(Boolean);
+  const home = process.env.CHAINBOOT_HOME ?? path.join(process.env.HOME ?? "/root", ".chainboot");
+  try {
+    const c = JSON.parse(fs.readFileSync(path.join(home, "config.json"), "utf8"));
+    return (c.rpcs?.[network] ?? []).filter((u: unknown) => typeof u === "string");
+  } catch { return []; }
+}
+
+function chain(repo: string): Promise<Chain> {
+  chainOpen ??= (async () => {
+    const [address, name = "main"] = repo.slice("chain:".length).split("/");
+    const network = process.env.SOLINUX_NETWORK ?? setting("network") ?? "devnet";
+    const urls = rpcEndpoints(network);
+    if (!urls.length) fail(`a repository on chain is read through RPC endpoints, and none is set for ${network}. Add one: chainboot rpc add <address>`);
+    const sdk = await import(new URL("./vendor/chainboot-sdk.mjs", import.meta.url).href);
+    const genesis = sdk.GENESIS[network];
+    if (!genesis) fail(`pkg does not know the network "${network}" (devnet, testnet, mainnet-beta)`);
+    let publisher: Uint8Array;
+    try { publisher = sdk.addressToBytes(address); } catch { fail(`"${address}" is not a publisher address`); }
+    const pool = new sdk.RpcPool(urls);
+    await pool.probe(genesis);
+    const store = new sdk.ChainStore(pool);
+    const record = await store.getPointer(sdk.tagAddress("solinux-pkg", publisher, name), [publisher]);
+    if (!record) fail(`${address} has published no package repository "${name}" on ${network}`);
+    let index: Ref;
+    try { index = JSON.parse(record.payload.toString("utf8")).index; } catch { fail("the repository's pointer is not in a format this pkg understands"); }
+    if (!index || typeof index.sig !== "string" || !/^[0-9a-f]{64}$/.test(index.sha256 ?? "")) fail("the repository's pointer names no index");
+    const cache = path.join(CACHE, "objects");
+    fs.mkdirSync(cache, { recursive: true });
+    return { store, publisher, cache, index };
+  })();
+  return chainOpen;
+}
+
+async function chainGet(repo: string, ref: Ref, onProgress?: (done: number, total: number) => void): Promise<Buffer> {
+  const c = await chain(repo);
+  return Buffer.from(await c.store.get(ref, { signers: [c.publisher], cacheDir: c.cache, onProgress: (p: { bytes: number; size: number }) => onProgress?.(p.bytes, p.size) }));
+}
 
 /** Reads one file of the repository: from a web address or from a directory. */
-async function fetchFile(repo: string, name: string, onProgress?: (done: number, total: number) => void): Promise<Buffer> {
+async function fetchFile(repo: string, name: string, onProgress?: (done: number, total: number) => void, ref?: Ref): Promise<Buffer> {
+  if (isChain(repo)) {
+    if (name === "index.json") return chainGet(repo, (await chain(repo)).index);
+    if (!ref) throw new Error(`the index does not say where ${name} is on chain`);
+    return chainGet(repo, ref, onProgress);
+  }
   if (!isUrl(repo)) {
     const p = path.join(repo.replace(/^file:\/\//, ""), name);
     if (!fs.existsSync(p)) throw new Error(`the repository ${repo} has no ${name}`);
@@ -157,7 +217,9 @@ function plan(idx: Index, have: Map<string, Installed>, names: string[]): string
   const state = new Map<string, "visiting" | "done">();
   const visit = (name: string, wantedBy: string | null) => {
     const p = idx.packages[name];
-    if (!p) fail(wantedBy ? `${wantedBy} needs ${name}, which the repository does not have` : `the repository has no package "${name}"`);
+    // A repository need not carry what every Solinux already has: something needed that is installed is fine as it is.
+    if (!p && wantedBy && have.has(name)) return;
+    if (!p) fail(wantedBy ? `${wantedBy} needs ${name}, which is not installed and which the repository does not have` : `the repository has no package "${name}"`);
     if (state.get(name) === "done") return;
     if (state.get(name) === "visiting") return;   // two packages that need each other: either order works
     state.set(name, "visiting");
@@ -226,7 +288,7 @@ async function install(names: string[]): Promise<void> {
         last = now;
         if (JSON_OUT) console.log(JSON.stringify({ event: "download", name, done, total: total || p.size }));
         else if (process.stdout.isTTY) process.stdout.write(`\r${name}: ${size(done)} of ${size(total || p.size)}   `);
-      }).catch((e) => fail(`${name} could not be fetched: ${(e as Error).message}`));
+      }, p.ref).catch((e) => fail(`${name} could not be fetched: ${(e as Error).message}`));
       if (!JSON_OUT && process.stdout.isTTY) process.stdout.write("\r\x1b[K");
       // What arrives must be exactly what the index describes; otherwise nothing of it touches the system.
       if (crypto.createHash("sha256").update(data).digest("hex") !== p.sha256) fail(`${name}: the archive does not match the hash in the index. Nothing of it was installed.`);

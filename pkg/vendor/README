@@ -1,0 +1,2 @@
+chainboot-sdk.mjs is the SDK of chainboot (https://github.com/bettercallfolio/chainboot, MIT), built from its
+source at commit 4ac9d9c (version 0.1.0) with "npm run build". pkg reads on-chain repositories with it.

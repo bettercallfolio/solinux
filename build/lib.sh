@@ -59,7 +59,7 @@ finish_package() {
 }
 
 # The stages whose recipes install into $DEST and become packages.
-packaged() { [ "$1" = base ] || [ "$1" = solana ] || [ "$1" = desktop ]; }
+packaged() { [ "$1" = base ] || [ "$1" = solana ] || [ "$1" = desktop ] || [ "$1" = apps ]; }
 
 # run_recipe <stage> <file>
 run_recipe() {

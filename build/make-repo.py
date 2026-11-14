@@ -26,7 +26,7 @@ REPO_SRC = os.path.join(HERE, "..")
 WORK = os.environ.get("WORK", os.path.expanduser("~/build"))
 PKG = os.path.join(WORK, "packages")
 OUT = os.path.join(WORK, "repo")
-stages = sys.argv[1:] or ["base", "solana", "desktop"]
+stages = sys.argv[1:] or ["base", "solana", "desktop", "apps"]
 os.makedirs(OUT, exist_ok=True)
 
 ELF = b"\x7fELF"
