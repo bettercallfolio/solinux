@@ -4,8 +4,8 @@
 #   REPO   this repository
 #
 # A recipe is a small shell file that sets  pkg  ver  src  and defines  build().
-# build() starts inside the unpacked source. In the "base" stage it must install
-# into $DEST; the result becomes a package archive and is then installed for real.
+# build() starts inside the unpacked source. In the packaged stages (base, solana, desktop) it must
+# install into $DEST; the result becomes a package archive and is then installed for real.
 
 set -euo pipefail
 umask 022
@@ -58,6 +58,9 @@ finish_package() {
   if [ -x /usr/sbin/ldconfig ] || [ -x /sbin/ldconfig ]; then ldconfig 2>/dev/null || true; fi
 }
 
+# The stages whose recipes install into $DEST and become packages.
+packaged() { [ "$1" = base ] || [ "$1" = solana ] || [ "$1" = desktop ]; }
+
 # run_recipe <stage> <file>
 run_recipe() {
   local stage=$1 file=$2
@@ -73,7 +76,7 @@ run_recipe() {
     dir=$WORK/tmp/$stage-$pkg
     rm -rf "${dir:?}"; mkdir -p "$dir"; cd "$dir"
     [ -z "$src" ] || tar -xf "$S/$src" --strip-components=1
-    if [ "$stage" = base ]; then
+    if packaged "$stage"; then
       export DEST=$WORK/tmp/dest-$pkg
       rm -rf "${DEST:?}"; mkdir -p "$DEST"
     fi
@@ -82,7 +85,7 @@ run_recipe() {
     set +e
     ( set -e; build ) > "$log" 2>&1
     rc=$?
-    if [ $rc -eq 0 ] && [ "$stage" = base ]; then
+    if [ $rc -eq 0 ] && packaged "$stage"; then
       ( set -e; finish_package "$pkg" "$ver" ) >> "$log" 2>&1
       rc=$?
     fi
@@ -91,7 +94,7 @@ run_recipe() {
       say "FAILED: $stage/$pkg (log: $log)"; tail -n 30 "$log"; exit 1
     fi
     cd /; rm -rf "${dir:?}"
-    [ "$stage" != base ] || rm -rf "${DEST:?}"
+    ! packaged "$stage" || rm -rf "${DEST:?}"
     touch "$mark"
     printf '          %-22s done in %s s\n' "" "$((SECONDS - t0))"
   )

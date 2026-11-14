@@ -106,3 +106,13 @@ f7e9383b8c0baa81b687e5b5eecc01beefaf1b19b64151d95ed61647fe7a315c https://github.
 e79c699c7e949dccd0a4a125e17b8d1261e311b16979dbc8eb34542f3966d82e https://github.com/tmux/tmux/releases/download/3.8/tmux-3.8.tar.gz
 71b8d6e8f5fe81f6c6d0d110e3892251f6ce76ed095abd315e26e6e1193af3af https://github.com/jqlang/jq/releases/download/jq-1.8.2/jq-1.8.2.tar.gz
 a8b164386494cb85bb255a415a3f5f80afe7a0c4491da5d113b3a0f951087e65 https://github.com/htop-dev/htop/releases/download/3.5.3/htop-3.5.3.tar.xz
+# The Solana developer layer: compilers and build tools, then Solana's own programs.
+1db9e61e60b6e0874c86386340b910382f3c5e75b9fbfb44d122063129a2789d https://cmake.org/files/v4.4/cmake-4.4.2.tar.gz
+922f1817a0df7b1489272d18134ee0087a8b068828f87ac63b9861b1a9965888 https://github.com/llvm/llvm-project/releases/download/llvmorg-22.1.8/llvm-project-22.1.8.src.tar.xz
+4a2084f9714f2f3babc0ed58065c3a6b83cd2828ea19aec1518995a6d2376187 https://www.linuxfromscratch.org/patches/blfs/13.1/llvm-22.1.8-upstream_fix-1.patch
+0ed06fdaffd4722a7702e0b4eebfafc897ab8f513e8e1b247cdd7e5c6df6ded2 https://static.rust-lang.org/dist/rustc-1.97.1-src.tar.xz
+f6d95e10a0431ee1067fc6aabe9f762908b4716dd35324e1ddb4b1466b76659f https://nodejs.org/dist/v24.19.0/node-v24.19.0.tar.xz
+6e1aee535473414164bf83e4ebc40240dec71a4701f8a642d906e95bea1aea0c https://github.com/abseil/abseil-cpp/releases/download/20260526.0/abseil-cpp-20260526.0.tar.gz
+f0b6838e7522a8da96126d487068c959bc624926368f3024ac8fd03abd0a1ac4 https://github.com/protocolbuffers/protobuf/releases/download/v35.1/protobuf-35.1.tar.gz
+e23ce28d4fbcbfdb1dfc2a6b5f8b4da2fbc3597d8a8c067d3914fca60227b395 https://github.com/anza-xyz/agave/archive/refs/tags/v4.3.2.tar.gz#agave-4.3.2.tar.gz
+2e4dd35104e003ef09890c35b29b45e1bf66f8f214dc749adbcecae9c0e467e2 https://github.com/solana-foundation/anchor/archive/refs/tags/v1.2.2.tar.gz#anchor-1.2.2.tar.gz

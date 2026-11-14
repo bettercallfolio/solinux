@@ -7,12 +7,13 @@ WORK=${WORK:-$HOME/build}
 mkdir -p "$WORK/sources"; cd "$WORK/sources"
 fail=0
 fetch_one() {
-  local sum=$1 url=$2 file=${2##*/}
+  # "address#name" saves the download under that name (for addresses that end in something like v1.2.tar.gz)
+  local sum=$1 url=${2%%#*} file=${2##*[/#]}
   if [ ! -s "$file" ]; then
     curl -fsSL --retry 3 -A "Mozilla/5.0" -o "$file.part" "$url" && mv "$file.part" "$file" || { echo "cannot download $url"; return 1; }
   fi
   local got; got=$(sha256sum "$file" | cut -d' ' -f1)
-  if [ "$sum" = - ]; then echo "$got $url"; return 0; fi
+  if [ "$sum" = - ]; then echo "$got $2"; return 0; fi
   [ "$got" = "$sum" ] || { echo "WRONG HASH: $file"; return 1; }
 }
 export -f fetch_one
