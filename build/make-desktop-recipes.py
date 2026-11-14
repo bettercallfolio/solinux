@@ -24,7 +24,18 @@ def write(number, pkg, ver, src, body, note=""):
     lines = [f"pkg={pkg} ver={ver}" + (f" src={src}" if src else "")]
     if note:
         lines += [f"# {l}" for l in note.split("\n")]
-    lines += ["build() {"] + ["  " + l if l else "" for l in body.strip("\n").split("\n")] + ["}"]
+    lines += ["build() {"]
+    inside = None   # the word that ends a here-document: its lines are written as they are
+    for l in body.strip("\n").split("\n"):
+        if inside:
+            lines.append(l)
+            if l == inside:
+                inside = None
+            continue
+        lines.append("  " + l if l else "")
+        if "<<'" in l:
+            inside = l.split("<<'")[1].split("'")[0]
+    lines += ["}"]
     with open(os.path.join(OUT, f"{number:03d}-{pkg}.sh"), "w") as f:
         f.write("\n".join(lines) + "\n")
     count += 1
