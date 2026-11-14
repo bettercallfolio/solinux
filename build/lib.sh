@@ -32,7 +32,17 @@ finish_package() {
       mkdir -p "usr/$d"; cp -a "$d"/. "usr/$d"/; rm -rf "$d"
     fi
   done
-  rm -rf usr/share/info/dir usr/share/doc
+  # Not carried: documentation directories, GNU info manuals (the manual pages stay), and
+  # translations for languages the system makes no locale for.
+  rm -rf usr/share/info usr/share/doc
+  if [ -d usr/share/locale ]; then
+    for d in usr/share/locale/*; do
+      case ${d##*/} in
+        en|en_*|de|es|fr|it|ja|ko|pt_BR|ru|tr|zh_CN|locale.alias) ;;
+        *) rm -rf "$d" ;;
+      esac
+    done
+  fi
   find . -name '*.la' -delete
   if command -v strip >/dev/null; then
     # (a package need not have any of these directories: "|| true" keeps a missing one from stopping the build)
