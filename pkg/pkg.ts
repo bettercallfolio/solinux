@@ -107,8 +107,14 @@ function chain(repo: string): Promise<Chain> {
   chainOpen ??= (async () => {
     const [address, name = "main"] = repo.slice("chain:".length).split("/");
     const network = process.env.SOLINUX_NETWORK ?? setting("network") ?? "devnet";
-    const urls = rpcEndpoints(network);
-    if (!urls.length) fail(`a repository on chain is read through RPC endpoints, and none is set for ${network}. Add one: chainboot rpc add <address>`);
+    let urls = rpcEndpoints(network);
+    if (!urls.length) {
+      // No endpoint of your own: the network's public one works, slowly (it allows few requests).
+      const open: Record<string, string> = { devnet: "https://api.devnet.solana.com", testnet: "https://api.testnet.solana.com", "mainnet-beta": "https://api.mainnet-beta.solana.com" };
+      if (!open[network]) fail(`a repository on chain is read through RPC endpoints, and none is set for ${network}. Add one: chainboot rpc add <address>`);
+      urls = [open[network]!];
+      if (!JSON_OUT) console.error(`pkg: reading ${network} through its public endpoint, which is slow. Your own is much faster: chainboot rpc add <address>`);
+    }
     const sdk = await import(new URL("./vendor/chainboot-sdk.mjs", import.meta.url).href);
     const genesis = sdk.GENESIS[network];
     if (!genesis) fail(`pkg does not know the network "${network}" (devnet, testnet, mainnet-beta)`);
