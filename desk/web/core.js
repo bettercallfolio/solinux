@@ -124,7 +124,7 @@ function open() {
   ws.onopen = async () => {
     opened = true; retry = 0;
     try {
-      session.hello = await call("hello");
+      session.hello = await call("hello", { timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone });
       for (const t of topics) call("sub", { topic: t }).catch(() => {});
       session.connected = true;
       emit("connected", session.hello);

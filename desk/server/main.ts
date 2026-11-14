@@ -89,8 +89,21 @@ function broadcast(event: string, data: unknown): void {
 term.onTermEvent(broadcast);
 apps.onAppEvent(broadcast);
 
+/**
+ * The clock of the person at the browser. A system that has no time zone of its own (a machine
+ * that was just made: its clock is on UTC) shows theirs: every terminal and application started
+ * from here gets it. A system whose time zone was set (timedatectl, /etc/localtime, TZ) keeps its own.
+ */
+let zoneFromBrowser = false;
+function useTimeZone(zone: unknown): void {
+  if (process.env.TZ && !zoneFromBrowser) return;
+  try { if (!/\/(UTC|Etc\/UTC|UCT|Universal)$/.test(fs.readlinkSync("/etc/localtime"))) return; } catch { /* no such link: no zone was set */ }
+  if (typeof zone !== "string" || !/^[A-Za-z0-9_+-]+(\/[A-Za-z0-9_+-]+){0,2}$/.test(zone)) return;
+  if (fs.existsSync(path.join("/usr/share/zoneinfo", zone))) { process.env.TZ = zone; zoneFromBrowser = true; }
+}
+
 const methods: Record<string, Method> = {
-  hello: async () => ({ version: VERSION, sys: sysInfo(), tools: await sol.tools(), token: !!TOKEN }),
+  hello: async (p) => { useTimeZone(p?.timeZone); return { version: VERSION, sys: sysInfo(), tools: await sol.tools(), token: !!TOKEN }; },
 
   sub: (p, conn) => { subs.get(conn)!.add(String(p.topic)); pump(); return true; },
   unsub: (p, conn) => { subs.get(conn)!.delete(String(p.topic)); return true; },
