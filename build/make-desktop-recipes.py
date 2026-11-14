@@ -181,6 +181,43 @@ install -m644 "$REPO/desk/system/solinux-desk.service" "$DEST/usr/lib/systemd/sy
 ln -s /usr/lib/systemd/system/solinux-desk.service "$DEST/etc/systemd/system/multi-user.target.wants/solinux-desk.service"
 """, "The Solinux desktop: the server, the page a browser shows, and its two small helpers\n(one gives a terminal to a command, one arranges the windows of a graphical application).")
 
+# ---- the web browser, which every Solinux comes with
+autotools(292, "nasm", "3.02", "nasm-3.02.tar.xz", "--prefix=/usr", "An assembler: Firefox's video decoders are built with it.")
+autotools(293, "alsa-lib", "1.2.16.1", "alsa-lib-1.2.16.1.tar.bz2", "--prefix=/usr", "The sound library Firefox is built against.")
+write(294, "cbindgen", "0.29.4", "cbindgen-0.29.4.tar.gz", """
+export CARGO_HOME=$PWD/.cargo-home
+cargo build --release
+install -Dm755 target/release/cbindgen "$DEST/usr/bin/cbindgen"
+""", "Writes C headers for Rust code: needed to build Firefox.")
+write(295, "firefox", "153.2.0esr", "firefox-153.2.0esr.source.tar.xz", """
+cat > mozconfig <<'X'
+ac_add_options --prefix=/usr
+ac_add_options --enable-application=browser
+ac_add_options --enable-default-toolkit=cairo-gtk3-x11-only
+ac_add_options --disable-crashreporter
+ac_add_options --disable-updater
+ac_add_options --disable-tests
+ac_add_options --disable-debug-symbols
+ac_add_options --disable-necko-wifi
+ac_add_options --enable-audio-backends=alsa
+ac_add_options --without-wasm-sandboxed-libraries
+ac_add_options --enable-system-ffi
+ac_add_options --enable-system-pixman
+ac_add_options --with-system-jpeg
+ac_add_options --with-system-zlib
+unset MOZ_TELEMETRY_REPORTING
+mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/obj
+MOZ_APP_REMOTINGNAME=firefox
+X
+export MACH_BUILD_PYTHON_NATIVE_PACKAGE_SOURCE=none MOZBUILD_STATE_PATH=$PWD/mozbuild SHELL=/bin/bash
+./mach build
+DESTDIR="$DEST" ./mach install
+install -d "$DEST/usr/share/applications" "$DEST/usr/share/pixmaps"
+printf '%s\\n' '[Desktop Entry]' 'Name=Firefox' 'GenericName=Web Browser' 'Comment=Browse the web' 'Exec=firefox %u' 'Terminal=false' \\
+  'Type=Application' 'Icon=firefox' 'Categories=Network;WebBrowser;' 'StartupWMClass=firefox' > "$DEST/usr/share/applications/firefox.desktop"
+ln -s /usr/lib/firefox/browser/chrome/icons/default/default128.png "$DEST/usr/share/pixmaps/firefox.png"
+""", "Firefox, built from Mozilla's source without its official branding (a distribution's own build).")
+
 # ---- applications: not part of the system's image; they are installed from the repository
 OUT = os.path.join(HERE, "..", "recipes", "apps")
 os.makedirs(OUT, exist_ok=True)
