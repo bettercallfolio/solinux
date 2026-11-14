@@ -17,6 +17,7 @@ import wallets from "./views/wallets.js";
 import software from "./views/software.js";
 import { images, media, documents, calculator } from "./views/everyday.js";
 import text from "./views/text.js";
+import welcome from "./views/welcome.js";
 import settings from "./views/settings.js";
 
 // The desktop's own applications. `tint` colours the icon; w and h are the first size of the window.
@@ -29,6 +30,7 @@ const APPS = [
   { ...wallets, tint: "#e5a98f", w: 900, h: 600 },
   { ...software, tint: "#c9a7e0", w: 940, h: 660 },
   // Everyday applications: in the launcher, and in the dock while they are open.
+  { ...welcome, tint: "#86c7a4", w: 760, h: 560, extra: true },
   { ...text, tint: "#d7dbdf", w: 820, h: 620, extra: true },
   { ...images, tint: "#8fd0a8", w: 900, h: 640, extra: true },
   { ...media, tint: "#e5a98f", w: 900, h: 600, extra: true },
@@ -81,7 +83,8 @@ function saveSession() {
 function restoreSession() {
   restoring = true;
   const open = store.get("session", null);
-  for (const id of open ?? ["home"]) if (APPS.some((a) => a.id === id)) go(id);
+  // The very first time: a few words about where things are.
+  for (const id of open ?? ["welcome"]) if (APPS.some((a) => a.id === id)) go(id);
   restoring = false;
 }
 
