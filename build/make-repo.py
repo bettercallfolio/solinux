@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Makes a package repository out of the packages that were built.
 
-    make-repo.py [<stage>...]          default: base solana desktop
+    make-repo.py [<stage>...]          default: base solana desktop apps extra
 
 Writes <work>/repo/: every package as <name>-<version>.tar.xz, and index.json, which says
 for each package its version, a one-line summary, sizes, SHA-256, what else it needs, and,
@@ -26,7 +26,7 @@ REPO_SRC = os.path.join(HERE, "..")
 WORK = os.environ.get("WORK", os.path.expanduser("~/build"))
 PKG = os.path.join(WORK, "packages")
 OUT = os.path.join(WORK, "repo")
-stages = sys.argv[1:] or ["base", "solana", "desktop", "apps"]
+stages = sys.argv[1:] or ["base", "solana", "desktop", "apps", "extra"]
 os.makedirs(OUT, exist_ok=True)
 
 ELF = b"\x7fELF"

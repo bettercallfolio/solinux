@@ -190,3 +190,21 @@ f740db7f488255944ffd4428416ee3390a96742856916433df468c281436480e https://www.als
 c443c99704aadaf60fb267d709c42bc283e49e82292084f976369c8327ad833c https://archive.mozilla.org/pub/firefox/releases/153.2.0esr/source/firefox-153.2.0esr.source.tar.xz
 5c9f64123c194b150fee89049991687386e6ff36ef2af7b80ba53efaf368cc95 https://www.x.org/pub/individual/font/font-util-1.4.1.tar.xz
 3d86b6383fb5fd9eb9578d2cd47d92801191f4bf3f9bc61419bfefc8aa1e531a https://github.com/linux-pam/linux-pam/releases/download/v1.7.2/Linux-PAM-1.7.2.tar.xz
+
+# ---- extra: packages that are not part of the system but can be installed (pkg install, Software)
+36fa734374b44783582cec09bcd67822e2f992c779ec1624ab5596df078d2f81 https://www.zsh.org/pub/zsh-5.9.2.tar.xz
+4f18ddae154e793e46eeab727c59ef1c0c0c2b744e7b94219710d76f530629ae https://www.lua.org/ftp/lua-5.4.8.tar.gz
+44324a802822f0a35d095aaad2f5f58fa7b1821ae87ae44dbcfc8a23fcd2e67e https://www.linuxfromscratch.org/patches/blfs/13.1/lua-5.4.8-shared_library-1.patch
+ca9a2c7e240919bc7ac12124593ae4529bb4eb5f7349d8857829b7e3f0b3b332 https://ftpmirror.gnu.org/screen/screen-5.0.2.tar.gz
+495a0a61f26404070fe8a719d80406dc7f337623788e445b92a9f6de512ab9de https://ftp.osuosl.org/pub/blfs/conglomeration/joe/joe-4.6.tar.gz
+4a10391aab0b8ce1f539e82a1966693b2a6cf225972a6504ebb7ec4fa71675de https://github.com/lsof-org/lsof/releases/download/4.99.7/lsof-4.99.7.tar.gz
+7e5600ad0b21918bc41803bd84d0c2967e097fb7fbaa2e7aeb90beeb1121e54b https://github.com/ip7z/7zip/archive/26.02/7zip-26.02.tar.gz
+cae149d42f844e5185d8c81d7db3913a8fa214c65f852200a9d896b468af164c http://ftp.midnight-commander.org/mc-4.8.33.tar.xz
+1c036c0d72e4b3d1fb5c94c88632add6f9d76f4d7c4d2ea793c12a9f19a3228c https://ftpmirror.gnu.org/gdb/gdb-17.2.tar.xz
+5d589152eb8071c02feab8ce6ab719e431a1fbc3e2b1700f5432632a8b9264dc https://sourceware.org/pub/valgrind/valgrind-3.27.1.tar.bz2
+c4631c6b5a11527cdc3cb7872fc23b7f2b25c2b021d596be410dadb40315f166 http://links.twibright.com/download/links-2.30.tar.bz2
+969be283670deadd66934865c4de6c5ab045e3a3facc2b228decf91a20d8c36c https://invisible-mirror.net/archives/xterm/xterm-411.tgz
+250f9752f69dc522e529a81aaa9395705f7fc312ff2453e5de59ac2ba1f2858f https://downloads.sourceforge.net/enlightenment/imlib2-1.12.6.tar.xz
+97e89bb2cf5ada41e8c8e916ea4d7d64c51faaae4847f00fcc088fa06e1b5ca1 https://feh.finalrewind.org/feh-3.12.4.tar.bz2
+6baf910928f404167ba49be6340195dec340795724722b331f5a2143f5aa0d01 https://www.mupdf.com/downloads/archive/mupdf-1.26.12-source.tar.gz
+1da5790d9580c81932b5bf700633114468da7b3412d69faa767daebf974f4586 https://ftpmirror.gnu.org/emacs/emacs-31.1.tar.xz
