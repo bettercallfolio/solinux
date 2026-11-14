@@ -179,7 +179,7 @@ cargo build --release
 install -d "$DEST/usr/bin"
 install -m755 target/release/cargo-capi target/release/cargo-cbuild target/release/cargo-cinstall target/release/cargo-ctest "$DEST/usr/bin/"
 """, "A cargo command that librsvg is built with."); n += 1
-meson(n, "librsvg", "2.62.3", "librsvg-2.62.3.tar.xz", "-D introspection=disabled -D docs=disabled -D vala=disabled -D tests=false",
+meson(n, "librsvg", "2.62.3", "librsvg-2.62.3.tar.xz", "-D introspection=disabled -D docs=disabled -D vala=disabled -D tests=false -D pixbuf-loader=enabled",
       "Draws SVG pictures: the icons of the desktop's applications are SVG.", before="export CARGO_HOME=$PWD/.cargo-home"); n += 1
 meson(n, "adwaita-icon-theme", "50.0", "adwaita-icon-theme-50.0.tar.xz"); n += 1
 
