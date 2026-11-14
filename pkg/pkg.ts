@@ -247,6 +247,7 @@ function plan(idx: Index, have: Map<string, Installed>, names: string[]): string
 
 function run(cmd: string, args: string[]): boolean {
   const r = spawnSync(cmd, args, { stdio: ["ignore", "ignore", "pipe"], encoding: "utf8" });
+  if (r.error && !JSON_OUT) console.error(`pkg: could not start ${cmd}: ${r.error.message}`);
   return r.status === 0;
 }
 function has(cmd: string): boolean {

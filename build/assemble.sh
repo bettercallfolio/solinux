@@ -44,9 +44,12 @@ done
 # file types, settings), made by the system's own tools for exactly the packages in it.
 sudo chroot "$root" /usr/sbin/ldconfig
 if [ -x "$root/usr/bin/pkg" ]; then
+  # (the tools need /proc and /dev/null; /dev is bound privately, so that taking it away
+  # again touches nothing of this computer's own mounts)
   sudo mount -t proc proc "$root/proc"
+  sudo mount --bind /dev "$root/dev"; sudo mount --make-private "$root/dev"
   sudo chroot "$root" /usr/bin/env -i PATH=/usr/bin:/usr/sbin HOME=/root /usr/bin/pkg refresh || echo "note: the lists could not all be made"
-  sudo umount "$root/proc"
+  sudo umount "$root/dev" "$root/proc"
   # (made with this moment's time: the archive below gives every file the same time anyway)
 fi
 echo "$name: $count packages, $(sudo du -sh "$root" | cut -f1) in $root"
