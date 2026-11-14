@@ -20,6 +20,7 @@ const browser = await chromium.launch();
 const ctx = await browser.newContext({ viewport: { width: 1600, height: 960 }, colorScheme: "dark" });
 const page = await ctx.newPage();
 const problems = [];
+page.on("response", (r) => { if (r.status() >= 400) problems.push(`HTTP ${r.status()} ${r.url().replace(/[?&]t=[0-9a-f]+/, "")}`); });
 page.on("console", (m) => { if (m.type() === "error") problems.push(`console: ${m.text()}`); });
 page.on("pageerror", (e) => problems.push(`error: ${e.message}`));
 let n = 0;
@@ -113,7 +114,13 @@ await step("system", async () => {
   if (!/^[0-9]/.test(key)) throw new Error(`System shows the balance "${key}"`);
 });
 
+// What is on the system's disk is asked of the desktop itself, so that the test also runs
+// against a desktop on another system (a machine, a virtual machine).
+const desk = (method, params) => page.evaluate(async ([m, p]) => (await import("/core.js")).call(m, p), [method, params]);
+const scenarioFile = async () => `${(await desk("fs.list", { path: "~" })).path}/desk-scenario.rs`;
+
 await step("files-editor", async () => {
+  await desk("fs.remove", { path: await scenarioFile() }).catch(() => {});   // left by a run that did not finish
   await open("files");
   await page.waitForSelector(".files-table tbody tr");
   await page.click(".view-files button:has-text('New file')");
@@ -123,8 +130,8 @@ await step("files-editor", async () => {
   await page.fill(".editor textarea", "fn main() {\n    println!(\"gm from Solinux\");\n}\n");
   await page.keyboard.press("Control+s");
   await page.waitForFunction(() => document.querySelector(".editor-head .btn.primary").disabled, null, { timeout: 5000 });
-  const saved = fs.readFileSync(path.join(os.homedir(), "desk-scenario.rs"), "utf8");
-  if (!saved.includes("gm from Solinux")) throw new Error("the file on disk does not have what was typed");
+  const saved = await desk("fs.read", { path: await scenarioFile() });
+  if (!String(saved.text ?? saved).includes("gm from Solinux")) throw new Error("the file on disk does not have what was typed");
 });
 await step("files-delete", async () => {
   await page.click(".editor-head .tool[title=Close]");
@@ -132,7 +139,7 @@ await step("files-delete", async () => {
   await page.click(".menu button:has-text('Delete')");
   await page.click(".dialog button.danger");
   await page.waitForFunction(() => !document.querySelector("tr[data-name='desk-scenario.rs']"));
-  if (fs.existsSync(path.join(os.homedir(), "desk-scenario.rs"))) throw new Error("the file is still on disk");
+  if (await desk("fs.read", { path: await scenarioFile() }).then(() => true, () => false)) throw new Error("the file is still on disk");
 });
 
 await step("terminal-reload", async () => {

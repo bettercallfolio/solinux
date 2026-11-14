@@ -1,0 +1,36 @@
+#!/bin/sh
+# cargo build-sbf and cargo test-sbf on Solinux.
+#
+# The tools themselves expect rustup, which hands them Solana's own Rust compiler (the one
+# that knows the SBF targets). Solinux has no rustup: its Rust is part of the system. So this
+# starts the real tool in its mode without rustup, with Solana's compiler first on the PATH.
+# That compiler belongs to Solana's platform tools, which the real tool downloads into
+# ~/.cache/solana the first time (about 1.7 GB on disk); here that happens before the first build.
+name=${0##*/}
+real=/usr/lib/solana/$name
+sub=${name#cargo-}                     # cargo runs a subcommand as: cargo-build-sbf build-sbf <options>
+lead=
+if [ "${1:-}" = "$sub" ]; then lead=$sub; shift; fi
+
+version=
+want=
+for a in "$@"; do
+  case $a in
+    -h|--help|-V|--version) exec "$real" ${lead:+"$lead"} "$@" ;;
+    --) break ;;
+  esac
+  if [ -n "$want" ]; then version=$a; want=; fi
+  case $a in
+    --tools-version) want=1 ;;
+    --tools-version=*) version=${a#--tools-version=} ;;
+  esac
+done
+[ -n "$version" ] || version=$(/usr/lib/solana/cargo-build-sbf --version | sed -n 's/^platform-tools //p')
+case $version in v*) ;; *) version=v$version ;; esac
+tools=${HOME:-/root}/.cache/solana/$version/platform-tools/rust/bin
+
+if [ ! -x "$tools/rustc" ]; then
+  echo "Solinux: getting Solana's platform tools $version (once; about 1.7 GB on disk)" >&2
+  /usr/lib/solana/cargo-build-sbf --install-only --no-rustup-override --tools-version "$version" || exit $?
+fi
+PATH=$tools:$PATH exec "$real" ${lead:+"$lead"} --no-rustup-override "$@"
