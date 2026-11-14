@@ -1,0 +1,28 @@
+{
+  "policies": {
+    "DisableTelemetry": true,
+    "DisableFirefoxStudies": true,
+    "DisableAppUpdate": true,
+    "DisablePocket": true,
+    "DontCheckDefaultBrowser": true,
+    "OverrideFirstRunPage": "",
+    "OverridePostUpdatePage": "",
+    "UserMessaging": {
+      "WhatsNew": false,
+      "ExtensionRecommendations": false,
+      "FeatureRecommendations": false,
+      "UrlbarInterventions": false,
+      "SkipOnboarding": true,
+      "MoreFromMozilla": false
+    },
+    "DisplayBookmarksToolbar": "always",
+    "ManagedBookmarks": [
+      { "toplevel_name": "Solana" },
+      { "name": "Solana docs", "url": "https://solana.com/docs" },
+      { "name": "Anchor", "url": "https://www.anchor-lang.com/docs" },
+      { "name": "Explorer", "url": "https://explorer.solana.com/?cluster=devnet" },
+      { "name": "Faucet", "url": "https://faucet.solana.com/" },
+      { "name": "chainboot", "url": "https://chainboot.dev" }
+    ]
+  }
+}
