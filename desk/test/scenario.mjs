@@ -13,7 +13,7 @@ import path from "node:path";
 const { chromium } = await import(process.env.PLAYWRIGHT ?? "playwright");
 const out = process.argv[2] ?? "scenario";
 const base = process.argv[3] ?? "http://127.0.0.1:7654";
-const token = fs.readFileSync(path.join(os.homedir(), ".config/solinux/desk-token"), "utf8").trim();
+const token = process.argv[4] ?? fs.readFileSync(path.join(os.homedir(), ".config/solinux/desk-token"), "utf8").trim();
 fs.mkdirSync(out, { recursive: true });
 
 const browser = await chromium.launch();
