@@ -86,9 +86,10 @@ def wait_for(pattern, timeout):
     return None
 
 
-PROMPT = rb"solinux:[^\r\n]*# $"
+# (the prompt carries colour codes between the name and the colon)
+PROMPT = rb"solinux[^\r\n]*:[^\r\n]*# "
 failed = []
-if wait_for(rb"solinux:[^\r\n]*# ", 180) is None:
+if wait_for(PROMPT, 180) is None:
     print("FAILED: no root shell on the console within 3 minutes; the end of the console:")
     print(seen.decode("utf-8", "replace")[-3000:])
     p.kill(); sys.exit(1)
