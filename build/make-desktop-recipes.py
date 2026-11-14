@@ -99,6 +99,7 @@ meson(n, "libxcvt", "0.1.3", "libxcvt-0.1.3.tar.xz"); n += 1
 autotools(n, "nettle", "4.0", "nettle-4.0.tar.gz", "--prefix=/usr --disable-static", after='chmod 755 "$DEST"/usr/lib/lib{hogweed,nettle}.so'); n += 1
 meson(n, "xkeyboard-config", "2.48", "xkeyboard-config-2.48.tar.xz", note="The keyboard layouts of the world."); n += 1
 autotools(n, "xkbcomp", "1.5.0", "xkbcomp-1.5.0.tar.xz", XORG); n += 1
+autotools(n, "font-util", "1.4.1", "font-util-1.4.1.tar.xz", XORG, "Build macros for fonts; the display server's build asks for them."); n += 1
 write(n, "tigervnc", "1.16.2", "tigervnc-1.16.2.tar.gz", """
 # Only the server (Xvnc) is built: an X display without a screen, whose picture goes out over
 # the VNC protocol. The desktop gives every graphical application one of these.
@@ -134,7 +135,7 @@ meson(n, "shared-mime-info", "2.5.1", "shared-mime-info-2.5.1.tar.gz", "-D updat
 meson(n, "cairo", "1.18.4", "cairo-1.18.4.tar.xz", "-D tests=disabled"); n += 1
 meson(n, "pango", "1.58.2", "pango-1.58.2.tar.xz", "--wrap-mode=nofallback -D introspection=disabled -D build-testsuite=false -D build-examples=false"); n += 1
 meson(n, "at-spi2-core", "2.60.6", "at-spi2-core-2.60.6.tar.xz", "-D gtk2_atk_adaptor=false -D introspection=disabled -D docs=false"); n += 1
-meson(n, "gdk-pixbuf", "2.44.7", "gdk-pixbuf-2.44.7.tar.xz", "--wrap-mode=nofallback -D png=enabled -D jpeg=enabled -D gif=enabled -D tiff=disabled -D glycin=disabled -D thumbnailer=disabled -D introspection=disabled -D man=false -D documentation=false -D tests=false -D installed_tests=false",
+meson(n, "gdk-pixbuf", "2.44.7", "gdk-pixbuf-2.44.7.tar.xz", "--wrap-mode=nofallback -D png=enabled -D jpeg=enabled -D gif=enabled -D tiff=disabled -D glycin=disabled -D thumbnailer=disabled -D introspection=disabled -D man=false -D tests=false -D installed_tests=false",
       after='# Which picture formats it reads: listed once, here, for the files of this package.\n( cd "$DEST" && LD_LIBRARY_PATH="$DEST/usr/lib" GDK_PIXBUF_MODULEDIR="$DEST"/usr/lib/gdk-pixbuf-2.0/2.10.0/loaders usr/bin/gdk-pixbuf-query-loaders | sed "s|$DEST||g" > usr/lib/gdk-pixbuf-2.0/2.10.0/loaders.cache ) || true'); n += 1
 meson(n, "libepoxy", "1.5.10", "libepoxy-1.5.10.tar.xz", "-D egl=no -D glx=yes -D x11=true -D tests=false -D docs=false"); n += 1
 meson(n, "libxkbcommon", "1.13.2", "libxkbcommon-1.13.2.tar.gz", "-D enable-docs=false -D enable-wayland=false -D enable-tools=false",
