@@ -268,6 +268,9 @@ export function dialog({ title, body, fields = [], ok = "OK", cancel = "Cancel",
     function done(value) {
       document.removeEventListener("keydown", key, true);
       shade.classList.remove("in");
+      // While it fades it is no longer a dialog: nothing can be typed into it or found in it.
+      shade.inert = true; form.classList.add("closing"); form.removeAttribute("role");
+      for (const input of form.querySelectorAll("input, select, textarea, button")) input.disabled = true;
       setTimeout(() => shade.remove(), 150);
       resolve(value);
     }

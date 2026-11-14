@@ -82,6 +82,7 @@ await step("airdrop", async () => {
   await page.fill(".dialog input[name=amount]", "5");
   await page.click(".dialog button[type=submit]");
   await page.waitForFunction((b) => { const t = document.querySelector(".key-card .balance b")?.innerText ?? ""; return /^[0-9]/.test(t) && t !== b; }, before, { timeout: 30000 });
+  await page.waitForSelector(".dialog", { state: "detached" });   // (a dialog fades for a moment after it is answered)
 });
 
 await step("send", async () => {
@@ -192,7 +193,8 @@ if (tools.some((t) => t.name === "cargo" && t.version)) {
   });
   await step("program-deploy", async () => {
     await page.click(".proj-head button:has-text('Deploy')");
-    await page.waitForFunction(() => /finished|ended/.test(document.querySelector(".proj-job header span")?.textContent ?? ""), null, { timeout: 180000 });
+    // (the card still shows the build's result for a moment: wait for the deploy's own)
+    await page.waitForFunction(() => /deploy/.test(document.querySelector(".proj-job header h2")?.textContent ?? "") && /finished|ended/.test(document.querySelector(".proj-job header span")?.textContent ?? ""), null, { timeout: 180000 });
     const status = await page.locator(".proj-job header span").innerText();
     if (!/finished/.test(status)) throw new Error(`the deploy ${status}`);
     await page.waitForSelector(".view-programs table .tag.good:has-text('deployed')", { timeout: 30000 });
