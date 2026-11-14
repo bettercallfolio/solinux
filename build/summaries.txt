@@ -186,3 +186,8 @@ nasm: The Netwide Assembler
 alsa-lib: The sound library
 cbindgen: Makes C headers from Rust code
 firefox: The Firefox web browser
+libXxf86vm: X video mode extension library
+libdrm: Direct rendering manager library
+mako: Python template library
+pyyaml: Python library that reads and writes YAML
+mesa: OpenGL drawn by the processor (for WebGL and programs that use GL)

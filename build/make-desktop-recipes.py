@@ -128,6 +128,23 @@ make
 make -C hw/vnc DESTDIR="$DEST" install
 """, "The display server."); n += 1
 
+# ---- OpenGL, drawn by the processor (Mesa's llvmpipe): for WebGL in the browser and programs that draw with GL
+n = 260
+autotools(n, "libXxf86vm", "1.1.7", "libXxf86vm-1.1.7.tar.xz", XORG); n += 1
+meson(n, "libdrm", "2.4.134", "libdrm-2.4.134.tar.xz", "-D udev=true -D valgrind=disabled -D tests=false"); n += 1
+write(n, "mako", "1.4.1", "mako-1.4.1.tar.gz", """
+pip3 wheel -w dist --no-cache-dir --no-build-isolation --no-deps "$PWD"
+pip3 install --no-index --find-links dist --root "$DEST" --no-warn-script-location Mako
+""", "Mesa's build writes parts of its source with these templates."); n += 1
+write(n, "pyyaml", "6.0.3", "pyyaml-6.0.3.tar.gz", """
+pip3 wheel -w dist --no-cache-dir --no-build-isolation --no-deps "$PWD"
+pip3 install --no-index --find-links dist --root "$DEST" --no-warn-script-location PyYAML
+"""); n += 1
+meson(n, "mesa", "26.1.7", "mesa-26.1.7.tar.xz",
+      "-D platforms=x11 -D gallium-drivers=llvmpipe -D vulkan-drivers= -D glx=dri -D egl=enabled -D gbm=enabled -D gles1=disabled -D gles2=enabled "
+      "-D llvm=enabled -D shared-llvm=enabled -D glvnd=disabled -D video-codecs= -D valgrind=disabled -D libunwind=disabled",
+      note="OpenGL without a graphics card: the processor draws (llvmpipe). No hardware drivers and no Vulkan are built."); n += 1
+
 # ---- GTK and what it stands on
 n = 270
 meson(n, "fribidi", "1.0.16", "fribidi-1.0.16.tar.xz", "-D docs=false -D tests=false"); n += 1

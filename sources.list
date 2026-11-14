@@ -210,3 +210,8 @@ c4631c6b5a11527cdc3cb7872fc23b7f2b25c2b021d596be410dadb40315f166 http://links.tw
 1da5790d9580c81932b5bf700633114468da7b3412d69faa767daebf974f4586 https://ftpmirror.gnu.org/emacs/emacs-31.1.tar.xz
 949c3fb7a1267e995f2b7215bf11b5afee7f97ee1774bf71561bc58e9c9ff09e https://static.crates.io/crates/cargo-build-sbf/cargo-build-sbf-4.4.0.crate
 b6d6ae3d3c38f4b85eee2762fb1e8da27f789c08f0b22f3c4b77c0593afdffa3 https://static.crates.io/crates/spl-token-cli/spl-token-cli-5.6.1.crate
+ae50c0f669e0af5a67cc4cd0f54f21d64a64d2660af883e80e95d3fe51b945d8 https://www.x.org/pub/individual/lib/libXxf86vm-1.1.7.tar.xz
+ac5e74d157830eb8bee44c6a6bf3ad49774ef0dd2a72bdad74a8f20308b52a95 https://dri.freedesktop.org/libdrm/libdrm-2.4.134.tar.xz
+d7904710b662996425a21627710c4777c45053146942cf8a7aebf757c92b8c27 https://files.pythonhosted.org/packages/source/M/Mako/mako-1.4.1.tar.gz
+d76623373421df22fb4cf8817020cbb7ef15c725b9d5e45f17e189bfc384190f https://files.pythonhosted.org/packages/source/P/PyYAML/pyyaml-6.0.3.tar.gz
+25e0a669e6638c3563e7be32a0a09f1888317e6eed0d047dc41d49dc8de26c7d https://mesa.freedesktop.org/archive/mesa-26.1.7.tar.xz
