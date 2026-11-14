@@ -3,4 +3,8 @@
 # booted has no service manager, so the desktop is brought up here.
 export HOME=/root PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin LANG=C.UTF-8
 [ -x /usr/bin/solinux-desk ] && command -v node >/dev/null 2>&1 || exit 0
+# chainboot says where to listen so that the browser on the user's computer reaches the desktop:
+# this computer only, or (inside an engine container on macOS and Windows) the container's
+# passed-through ports. Either way the address to open is on 127.0.0.1.
+if [ "${CHAINBOOT_BIND:-}" = 0.0.0.0 ]; then exec /usr/bin/solinux-desk --host 0.0.0.0 --shown-host 127.0.0.1; fi
 exec /usr/bin/solinux-desk

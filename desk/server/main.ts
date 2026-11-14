@@ -343,7 +343,8 @@ server.on("error", (e: NodeJS.ErrnoException) => {
 });
 
 server.on("listening", () => {
-  const shown = HOST === "0.0.0.0" || HOST === "::" ? os.hostname() : HOST;
+  // --shown-host: the name to print when the address people open differs from where the server listens
+  const shown = option("shown-host", HOST === "0.0.0.0" || HOST === "::" ? os.hostname() : HOST);
   const address = `http://${shown}:${port}/${TOKEN ? `#token=${TOKEN}` : ""}`;
   console.log(`Solinux Desk ${VERSION} is running. Open it here:\n\n  ${address}\n`);
   if (HOST !== "127.0.0.1" && HOST !== "localhost" && !TOKEN) console.log("Warning: anyone who can reach this address controls this system. Use the token.");
