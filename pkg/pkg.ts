@@ -23,6 +23,7 @@
 import { spawnSync } from "node:child_process";
 import crypto from "node:crypto";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import readline from "node:readline";
 
@@ -128,8 +129,10 @@ function chain(repo: string): Promise<Chain> {
     let index: Ref;
     try { index = JSON.parse(record.payload.toString("utf8")).index; } catch { fail("the repository's pointer is not in a format this pkg understands"); }
     if (!index || typeof index.sig !== "string" || !/^[0-9a-f]{64}$/.test(index.sha256 ?? "")) fail("the repository's pointer names no index");
-    const cache = path.join(CACHE, "objects");
-    fs.mkdirSync(cache, { recursive: true });
+    // Looking (as an ordinary user) must work too: without the right to write the system's cache, a temporary one serves.
+    let cache = path.join(CACHE, "objects");
+    try { fs.mkdirSync(cache, { recursive: true }); fs.accessSync(cache, fs.constants.W_OK); }
+    catch { cache = path.join(os.tmpdir(), `solinux-pkg-${process.getuid?.() ?? 0}`); fs.mkdirSync(cache, { recursive: true }); }
     return { store, publisher, cache, index };
   })();
   return chainOpen;
