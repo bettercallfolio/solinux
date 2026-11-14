@@ -143,7 +143,7 @@ meson(n, "gdk-pixbuf", "2.44.7", "gdk-pixbuf-2.44.7.tar.xz", "--wrap-mode=nofall
 meson(n, "libepoxy", "1.5.10", "libepoxy-1.5.10.tar.xz", "-D egl=no -D glx=yes -D x11=true -D tests=false -D docs=false"); n += 1
 meson(n, "libxkbcommon", "1.13.2", "libxkbcommon-1.13.2.tar.gz", "-D enable-docs=false -D enable-wayland=false -D enable-tools=false",
       before='patch -Np1 -i "$S/libxkbcommon-1.13.2-upstream_fix-1.patch"'); n += 1
-autotools(n, "hicolor-icon-theme", "0.18", "hicolor-icon-theme-0.18.tar.xz", "--prefix=/usr"); n += 1
+meson(n, "hicolor-icon-theme", "0.18", "hicolor-icon-theme-0.18.tar.xz"); n += 1
 meson(n, "gsettings-desktop-schemas", "50.1", "gsettings-desktop-schemas-50.1.tar.xz", "-D introspection=false",
       before="""sed -i -r 's:"(/system):"/org/gnome\\1:g' schemas/*.in"""); n += 1
 meson(n, "gtk3", "3.24.52", "gtk-3.24.52.tar.xz", "-D man=false -D broadway_backend=true -D wayland_backend=false -D introspection=false -D demos=false -D examples=false -D tests=false -D print_backends=file -D colord=no",
