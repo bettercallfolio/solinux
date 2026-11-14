@@ -14,6 +14,7 @@ import files from "./views/files.js";
 import validator from "./views/validator.js";
 import explorer from "./views/explorer.js";
 import wallets from "./views/wallets.js";
+import software from "./views/software.js";
 import settings from "./views/settings.js";
 
 // The desktop's own applications. `tint` colours the icon; w and h are the first size of the window.
@@ -24,6 +25,7 @@ const APPS = [
   { ...validator, tint: "#d9b676", w: 1080, h: 700 },
   { ...explorer, tint: "#7fc7c9", w: 1000, h: 700 },
   { ...wallets, tint: "#e5a98f", w: 900, h: 600 },
+  { ...software, tint: "#c9a7e0", w: 940, h: 660 },
   { ...settings, tint: "#9aa3ad", w: 820, h: 680 },
 ];
 const made = new Map();   // id -> { root, api }

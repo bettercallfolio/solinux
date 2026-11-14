@@ -17,6 +17,7 @@ import * as term from "./term.ts";
 import * as files from "./files.ts";
 import * as sol from "./solana.ts";
 import * as apps from "./apps.ts";
+import * as packages from "./packages.ts";
 import net from "node:net";
 
 export const VERSION = "0.1.0";
@@ -124,6 +125,9 @@ const methods: Record<string, Method> = {
   "apps.list": (p) => ({ graphics: apps.graphics(), apps: apps.listApps(!!p?.fresh), sessions: apps.listSessions() }),
   "apps.launch": (p) => apps.launch({ app: p.app, command: p.command, name: p.name, width: p.width, height: p.height }),
   "apps.close": (p) => { apps.closeSession(Number(p.id), !!p.force); return true; },
+
+  "pkg.list": () => packages.packages(),
+  "pkg.command": (p) => packages.changeCommand(p.action, (p.names ?? []).map(String)),
 
   "val.status": () => sol.validatorStatus(),
   "val.start": (p) => { const s = sol.startValidator(p ?? {}); broadcast("val.status", s); return s; },
