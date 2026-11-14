@@ -24,10 +24,18 @@ mounted() { mountpoint -q "$1"; }
 case $action in
   start)
     sudo mkdir -p "$t/upper" "$t/work" "$m"
-    mounted "$m" || sudo mount -t overlay overlay -o "lowerdir=$lower,upperdir=$t/upper,workdir=$t/work" "$m"
+    mounted "$m" || { sudo mount -t overlay overlay -o "lowerdir=$lower,upperdir=$t/upper,workdir=$t/work" "$m"; sudo mount --make-private "$m"; }
     mounted "$m/proc" || sudo mount -t proc proc "$m/proc"
     mounted "$m/sys" || sudo mount -t sysfs sysfs "$m/sys"
-    mounted "$m/dev" || sudo mount --rbind /dev "$m/dev"
+    if ! mounted "$m/dev"; then
+      # this computer's devices, cut loose from its own mounts (private: nothing mounted or taken
+      # away on one side shows on the other; a lazy unmount here once took this computer's
+      # /dev/pts and /dev/shm with it), and terminals of the system's own
+      # (new terminals are looked for in "pts" beside ptmx: both come from the same file system)
+      sudo mount --rbind /dev "$m/dev"; sudo mount --make-rprivate "$m/dev"
+      sudo mount -t devpts -o newinstance,ptmxmode=0666,mode=620,gid=5 devpts "$m/dev/pts"
+      sudo mount --bind "$m/dev/pts/ptmx" "$m/dev/ptmx"
+    fi
     mounted "$m/run" || sudo mount -t tmpfs tmpfs "$m/run"
     mounted "$m/tmp" || sudo mount -t tmpfs tmpfs "$m/tmp"
     # name resolution: the system's resolv.conf points at a service that only a booted system runs

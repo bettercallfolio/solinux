@@ -19,9 +19,9 @@ sudo mkdir -p "$ROOT"/{dev,proc,sys,run} "$ROOT"/sol/{repo,sources,state,logs,pa
 mkdir -p "$WORK"/{state,logs,packages,tmp}
 m() { mountpoint -q "$2" || sudo mount "${@:3}" "$1" "$2"; }
 # /dev with everything mounted below it (the terminals among them), and cut loose from this
-# computer's own: a mount made on one side must not appear on the other. (A terminal file
+# computer's own (private): a mount made or taken away on one side must not show on the other. (A terminal file
 # system mounted on $ROOT/dev/pts of a plain bind would cover this computer's /dev/pts too.)
-mountpoint -q "$ROOT/dev" || { sudo mount --rbind /dev "$ROOT/dev"; sudo mount --make-rslave "$ROOT/dev"; }
+mountpoint -q "$ROOT/dev" || { sudo mount --rbind /dev "$ROOT/dev"; sudo mount --make-rprivate "$ROOT/dev"; }
 m proc "$ROOT/proc" -t proc
 m sysfs "$ROOT/sys" -t sysfs
 m tmpfs "$ROOT/run" -t tmpfs
