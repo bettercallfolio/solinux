@@ -9,12 +9,16 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
-export interface App { id: string; name: string; comment: string; icon: string; exec: string; categories: string[]; terminal: boolean; file: string }
+export interface App { id: string; name: string; comment: string; icon: string; exec: string; categories: string[]; terminal: boolean; file: string;
+  /** The kinds of file it says it opens (MIME types), and whether its command takes a file at all. */
+  mime: string[]; opensFiles: boolean }
 export interface Session { id: number; app: string; name: string; icon: string; title: string; width: number; height: number; started: number; windows: number;
   /** How many pixels of the display one unit of the browser window gets (2 on a high-density screen). */
   scale: number }
 
-interface Running extends Session { xvnc: ChildProcess; wm: ChildProcess | null; child: ChildProcess | null; ended: boolean; childGone: boolean; everHadWindow: boolean }
+interface Running extends Session { xvnc: ChildProcess; wm: ChildProcess | null; child: ChildProcess | null; ended: boolean; childGone: boolean; everHadWindow: boolean;
+  /** True once someone asked for it to close. */
+  asked: boolean }
 
 const HERE = path.dirname(new URL(import.meta.url).pathname);
 const APP_DIRS = [path.join(os.homedir(), ".local/share/applications"), "/usr/local/share/applications", "/usr/share/applications"];
@@ -66,6 +70,7 @@ function parseDesktop(file: string): App | null {
     id: path.basename(file, ".desktop"), name: entry.Name, comment: entry.Comment ?? entry.GenericName ?? "",
     icon: entry.Icon ?? "", exec: entry.Exec, categories: (entry.Categories ?? "").split(";").filter(Boolean),
     terminal: entry.Terminal === "true", file,
+    mime: (entry.MimeType ?? "").split(";").filter(Boolean), opensFiles: /%[fFuU]/.test(entry.Exec),
   };
 }
 
@@ -131,19 +136,37 @@ function freeDisplay(): number {
 
 const wait = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
-/** The command of a .desktop file without its placeholders (%f, %U, …). */
-function command(exec: string): string {
-  return exec.replace(/%%/g, "\u0000").replace(/\s*%[a-zA-Z]/g, "").replace(/\u0000/g, "%").trim();
+const quote = (text: string) => `'${text.replace(/'/g, `'\\''`)}'`;
+
+/**
+ * The command of a .desktop file without its placeholders (%f, %U, …). With a file: the file
+ * stands where the command wants one (or at the end, for a command that names no place).
+ */
+function command(exec: string, file?: string): string {
+  let placed = false;
+  const out = exec.replace(/%%/g, "\u0000").replace(/\s*%([a-zA-Z])/g, (_all, letter: string) => {
+    if (file && !placed && "fFuU".includes(letter)) { placed = true; return ` ${quote(file)}`; }
+    return "";
+  }).replace(/\u0000/g, "%").trim();
+  return file && !placed ? `${out} ${quote(file)}` : out;
 }
 
-export interface LaunchOptions { app?: string; command?: string; name?: string; width?: number; height?: number; scale?: number }
+export interface LaunchOptions { app?: string; command?: string; name?: string; width?: number; height?: number; scale?: number;
+  /** A file for the application to open. */
+  file?: string }
 
 export async function launch(o: LaunchOptions): Promise<Session> {
   const g = graphics();
   if (!g.ready) throw new Error(`this system cannot show graphical applications yet: ${g.missing.join(", ")} missing`);
   const app = o.app ? listApps().find((a) => a.id === o.app) : null;
   if (o.app && !app) throw new Error(`no application "${o.app}" is installed`);
-  const cmd = app ? command(app.exec) : String(o.command ?? "").trim();
+  let file: string | undefined;
+  if (o.file !== undefined) {
+    file = path.resolve(String(o.file));
+    if (!app) throw new Error("say which application opens the file");
+    if (!fs.existsSync(file)) throw new Error(`${file} does not exist`);
+  }
+  const cmd = app ? command(app.exec, file) : String(o.command ?? "").trim();
   if (!cmd) throw new Error("nothing to run");
   // On a high-density screen the application draws with more pixels (sharp text), not on a bigger area.
   const scale = Math.max(1, Math.min(3, Math.round((Number(o.scale) || 1) * 4) / 4));
@@ -156,7 +179,7 @@ export async function launch(o: LaunchOptions): Promise<Session> {
   { stdio: ["ignore", "ignore", "ignore"] });
   const s: Running = {
     id, app: app?.id ?? "", name: app?.name ?? o.name ?? cmd.split(/\s+/)[0]!, icon: app?.icon ?? "", title: app?.name ?? o.name ?? cmd,
-    width, height, started: Date.now(), windows: 0, scale, xvnc, wm: null, child: null, ended: false, childGone: false, everHadWindow: false,
+    width, height, started: Date.now(), windows: 0, scale, xvnc, wm: null, child: null, ended: false, childGone: false, everHadWindow: false, asked: false,
   };
   sessions.set(id, s);
   xvnc.on("exit", () => end(s));
@@ -216,13 +239,15 @@ function end(s: Running): void {
   s.wm?.kill("SIGTERM");
   s.xvnc.kill("SIGTERM");
   setTimeout(() => { try { if (s.child?.pid) process.kill(-s.child.pid, "SIGKILL"); } catch { /* gone */ } s.xvnc.kill("SIGKILL"); }, 3000).unref();
-  notify("app.closed", { id: s.id });
+  // (an application that ended at once without ever showing a window: the desktop says so)
+  notify("app.closed", { id: s.id, name: s.name, silent: s.everHadWindow || s.asked });
 }
 
 /** Asks the application to close, the way clicking a window's close button does. It may answer with a question. */
 export function closeSession(id: number, force = false): void {
   const s = sessions.get(id);
   if (!s) return;
+  s.asked = true;
   if (force || s.windows === 0) { end(s); return; }
   spawn(helper("solinux-wm")!, ["--close"], { env: { ...process.env, DISPLAY: `:${id}` }, stdio: "ignore" });
 }

@@ -2,6 +2,24 @@
 
 import { el, icon, call, attempt, dialog, confirmDialog, menu, toast, bytes, ago, copyText, fileUrl, store, emptyState, session, fill } from "../core.js";
 import { opener } from "./everyday.js";
+import { launchApp } from "../native.js";
+
+// What kind of file a name says it is, for asking which installed applications open it.
+const KINDS = {
+  pdf: "application/pdf", epub: "application/epub+zip", cbz: "application/vnd.comicbook+zip", xps: "application/oxps",
+  png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg", gif: "image/gif", webp: "image/webp", bmp: "image/bmp", svg: "image/svg+xml", tif: "image/tiff", tiff: "image/tiff",
+  html: "text/html", htm: "text/html", mp3: "audio/mpeg", ogg: "audio/ogg", wav: "audio/x-wav", flac: "audio/flac",
+  mp4: "video/mp4", webm: "video/webm", mkv: "video/x-matroska", zip: "application/zip",
+};
+const kindOf = (name) => KINDS[name.toLowerCase().split(".").pop()] ?? "text/plain";
+/** The installed applications that take a file, those that name this kind of file first. */
+async function appsFor(name) {
+  const r = await call("apps.list").catch(() => null);
+  const kind = kindOf(name), text = kind.startsWith("text/");
+  const takes = (a) => a.mime.includes(kind) || (text && a.mime.some((m) => m.startsWith("text/")));
+  const all = (r?.graphics?.ready ? r.apps : []).filter((a) => !a.terminal && (a.opensFiles || a.mime.length));
+  return { suited: all.filter(takes), others: all.filter((a) => !takes(a)) };
+}
 
 const IMAGES = /\.(png|jpe?g|gif|webp|svg|ico|bmp)$/i;
 const join = (dir, name) => (dir === "/" ? `/${name}` : `${dir}/${name}`);
@@ -105,10 +123,25 @@ export default {
       setTimeout(load, 1500);
     }
 
-    function rowMenu(anchor, e) {
+    // Any installed application that takes a file can open one: those that say they open this kind are
+    // offered by name, the rest behind "Open with…".
+    async function openWith(e, apps) {
       const path = join(dir, e.name);
-      menu(anchor, [
+      const v = await dialog({ title: `Open ${e.name} with`, fields: [
+        { name: "app", label: "Application", type: "select", value: apps[0].id, options: apps.map((a) => ({ value: a.id, label: a.name })) },
+      ], ok: "Open" });
+      if (v?.app) launchApp(v.app, apps.find((a) => a.id === v.app)?.name, path);
+    }
+
+    async function rowMenu(anchor, e) {
+      const path = join(dir, e.name);
+      // (the place is kept: by the time the applications are known, the button may have been redrawn)
+      const at = anchor instanceof Element ? (({ left, bottom }) => ({ x: left, y: bottom }))(anchor.getBoundingClientRect()) : anchor;
+      const { suited, others } = isDir(e) ? { suited: [], others: [] } : await appsFor(e.name);
+      menu(at, [
         { label: "Open", icon: isDir(e) ? "folder" : "app", run: () => activate(e) },
+        ...suited.slice(0, 4).map((a) => ({ label: `Open with ${a.name}`, icon: "app", run: () => launchApp(a.id, a.name, path) })),
+        (suited.length > 4 || others.length > 0) && { label: "Open with…", icon: "app", run: () => openWith(e, [...suited, ...others]) },
         !isDir(e) && opener(e.name) && { label: "Open in the editor", icon: "edit", run: () => edit(path) },
         !isDir(e) && { label: "Open in Text", icon: "edit", run: () => go("text", { path }) },
         !isDir(e) && ARCHIVE.test(e.name) && { label: "Unpack here", icon: "package", run: () => extract(e) },

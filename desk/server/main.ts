@@ -124,7 +124,7 @@ const methods: Record<string, Method> = {
   "sol.retireKey": (p) => sol.retireKey(String(p.path)),
 
   "apps.list": (p) => ({ graphics: apps.graphics(), apps: apps.listApps(!!p?.fresh), sessions: apps.listSessions() }),
-  "apps.launch": (p) => apps.launch({ app: p.app, command: p.command, name: p.name, width: p.width, height: p.height, scale: p.scale }),
+  "apps.launch": (p) => apps.launch({ app: p.app, command: p.command, name: p.name, width: p.width, height: p.height, scale: p.scale, file: p.file }),
   "apps.close": (p) => { apps.closeSession(Number(p.id), !!p.force); return true; },
 
   "proj.list": () => projects.listProjects(),
