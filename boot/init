@@ -1,0 +1,53 @@
+#!/bin/sh
+# The first program of a booted Solinux. It runs from the initramfs, finds the
+# file system named by root= on the kernel command line, and hands the boot over
+# to the system on it.
+
+mount -t devtmpfs dev /dev 2>/dev/null
+mount -t proc proc /proc
+mount -t sysfs sys /sys
+mount -t tmpfs run /run
+
+root='' rootflags='' mode=ro init=/sbin/init
+for word in $(cat /proc/cmdline); do
+  case $word in
+    root=*) root=${word#root=} ;;
+    rootflags=*) rootflags=${word#rootflags=} ;;
+    init=*) init=${word#init=} ;;
+    ro) mode=ro ;;
+    rw) mode=rw ;;
+  esac
+done
+
+rescue() {
+  echo
+  echo "Solinux cannot continue the boot: $1"
+  echo "This is a shell in the initramfs. \"exit\" tries again."
+  /bin/sh
+}
+
+while :; do
+  [ -n "$root" ] || { rescue "the kernel command line names no root= file system"; continue; }
+  # Disks appear a moment after the kernel starts: wait for the one we were told to use.
+  dev='' n=0
+  while [ $n -lt 300 ]; do
+    case $root in
+      LABEL=*|UUID=*|PARTLABEL=*|PARTUUID=*) dev=$(findfs "$root" 2>/dev/null) ;;
+      *) [ -b "$root" ] && dev=$root ;;
+    esac
+    [ -n "$dev" ] && break
+    sleep 0.1; n=$((n + 1))
+  done
+  [ -n "$dev" ] || { rescue "no disk has $root (waited 30 seconds)"; continue; }
+  if mount -o "$mode${rootflags:+,$rootflags}" "$dev" /sysroot; then
+    [ -x "/sysroot$init" ] || [ -L "/sysroot$init" ] || { umount /sysroot; rescue "$dev has no $init"; continue; }
+    break
+  fi
+  rescue "$dev could not be mounted"
+done
+
+mount --move /dev /sysroot/dev
+mount --move /proc /sysroot/proc
+mount --move /sys /sysroot/sys
+mount --move /run /sysroot/run
+exec switch_root /sysroot "$init"

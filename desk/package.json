@@ -1,0 +1,9 @@
+{
+  "name": "solinux-desk",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "The graphical interface of a Solinux system, served to a browser",
+  "license": "MIT",
+  "scripts": { "start": "node server/main.ts" }
+}
