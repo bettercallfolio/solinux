@@ -61,6 +61,9 @@ for name in sorted(os.listdir(PKG)):
                 new.addfile(m, t.extractfile(m) if m.isfile() else None)
     os.replace(src + ".new", src)
     names = sorted((m.name[2:] if m.name.startswith("./") else m.name) for m in out if m.name not in (".", "./"))
-    with open(os.path.join(PKG, pkg + ".files"), "w") as f:
+    # (written beside and moved into place: the old list may belong to another user)
+    listing = os.path.join(PKG, pkg + ".files")
+    with open(listing + ".new", "w") as f:
         f.write("\n".join(names) + "\n")
+    os.replace(listing + ".new", listing)
 print(f"{'taken out' if write else 'would take out'}: {total / 1e6:.0f} MB")
