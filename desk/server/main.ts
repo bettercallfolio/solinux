@@ -337,12 +337,16 @@ server.on("upgrade", (req, socket, head) => {
 
 // Another program (or another Solinux machine on the same computer) may hold the port: the next
 // free one is taken instead, unless a port was asked for by name.
-let port = PORT;
 const portGiven = process.argv.includes("--port");
+// SOLINUX_DESK_PORTS ("7654 7655 7657"): the only ports that reach the person's browser (set by
+// chainboot where machines run inside a container). Without it: the port, then the nineteen after it.
+const listed = (process.env.SOLINUX_DESK_PORTS ?? "").split(/\s+/).map(Number).filter((n) => Number.isInteger(n) && n > 0 && n < 65536);
+const candidates = portGiven ? [PORT] : listed.length ? listed : Array.from({ length: 20 }, (_, i) => PORT + i);
+let port = candidates.shift()!;
 const URL_FILE = path.join(os.homedir(), ".local", "state", "solinux", "desk.url");
 
 server.on("error", (e: NodeJS.ErrnoException) => {
-  if (e.code === "EADDRINUSE" && !portGiven && port < PORT + 20) { port++; server.listen(port, HOST); return; }
+  if (e.code === "EADDRINUSE" && candidates.length) { port = candidates.shift()!; server.listen(port, HOST); return; }
   console.error(e.code === "EADDRINUSE" ? `Port ${port} is already in use. Is the desktop already running? Try --port.` : `The desktop could not start: ${e.message}`);
   process.exit(1);
 });
