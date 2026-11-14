@@ -112,7 +112,8 @@ libssh2: SSH as a library (cargo and git transports use it)
 rust: The Rust compiler, cargo, clippy and rustfmt
 abseil: Google's C++ base libraries
 protobuf: Protocol Buffers: the compiler (protoc) and its library
-agave: Solana's command-line tools, validator, test validator and cargo build-sbf
+agave: Solana's command-line tools, validator, test validator and ledger tool
+cargo-build-sbf: cargo build-sbf and cargo test-sbf: build and test Solana programs
 spl-token: The command-line tool for tokens
 anchor: The framework most Solana programs are written with
 chainboot: Stores whole systems on Solana and runs them

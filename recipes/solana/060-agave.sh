@@ -1,6 +1,6 @@
 pkg=agave ver=4.3.2 src=agave-4.3.2.tar.gz
 # Solana's validator and tools, built from source: the command-line tools, the validator, the
-# local test validator, the ledger tool, and the cargo command that builds programs.
+# local test validator and the ledger tool.
 build() {
   export CARGO_HOME=$PWD/.cargo-home
   # The repository's own script (scripts/cargo-install-all.sh) goes through rustup; these are
@@ -14,11 +14,6 @@ build() {
   for b in "${names[@]}"; do install -m755 "target/release/$b" "$DEST/usr/bin/$b"; done
   install -m755 dev-bins/target/release/agave-ledger-tool "$DEST/usr/bin/agave-ledger-tool"
   for b in target/release/deps/libsolana*program.*; do
-    [ -e "$b" ] && cp "$b" "$DEST/usr/bin/deps/"
+    if [ -e "$b" ]; then cp "$b" "$DEST/usr/bin/deps/"; fi
   done
-  # cargo build-sbf: the version this release of Agave names.
-  maybeCargoBuildSbfVersionArg=
-  . scripts/cargo-build-sbf-version.sh
-  cargo install --locked cargo-build-sbf --root "$DEST/usr" $maybeCargoBuildSbfVersionArg
-  rm -f "${DEST:?}/usr/.crates.toml" "${DEST:?}/usr/.crates2.json"
 }

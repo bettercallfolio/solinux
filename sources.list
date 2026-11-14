@@ -208,3 +208,5 @@ c4631c6b5a11527cdc3cb7872fc23b7f2b25c2b021d596be410dadb40315f166 http://links.tw
 97e89bb2cf5ada41e8c8e916ea4d7d64c51faaae4847f00fcc088fa06e1b5ca1 https://feh.finalrewind.org/feh-3.12.4.tar.bz2
 6baf910928f404167ba49be6340195dec340795724722b331f5a2143f5aa0d01 https://www.mupdf.com/downloads/archive/mupdf-1.26.12-source.tar.gz
 1da5790d9580c81932b5bf700633114468da7b3412d69faa767daebf974f4586 https://ftpmirror.gnu.org/emacs/emacs-31.1.tar.xz
+949c3fb7a1267e995f2b7215bf11b5afee7f97ee1774bf71561bc58e9c9ff09e https://static.crates.io/crates/cargo-build-sbf/cargo-build-sbf-4.4.0.crate
+b6d6ae3d3c38f4b85eee2762fb1e8da27f789c08f0b22f3c4b77c0593afdffa3 https://static.crates.io/crates/spl-token-cli/spl-token-cli-5.6.1.crate
