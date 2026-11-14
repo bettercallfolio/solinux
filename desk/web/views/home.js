@@ -74,7 +74,7 @@ export default {
         el("button", { onclick: () => go("terminal", { fresh: true }) }, icon("terminal", 20), el("b", { text: "Terminal" }), el("span", { text: "A shell on this system" })),
         el("button", { onclick: () => go("files") }, icon("files", 20), el("b", { text: "Files" }), el("span", { text: "Browse and edit" })),
         el("button", { onclick: () => go("explorer") }, icon("explorer", 20), el("b", { text: "Explorer" }), el("span", { text: "Accounts and transactions" })),
-        el("button", { onclick: () => document.dispatchEvent(new KeyboardEvent("keydown", { key: "k", ctrlKey: true })) }, icon("command", 20), el("b", { text: "Commands" }), el("span", { text: "Ctrl+K finds anything" }))));
+        el("button", { onclick: () => window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", ctrlKey: true })) }, icon("command", 20), el("b", { text: "Commands" }), el("span", { text: "Ctrl+K finds anything" }))));
 
     // ---- processes
     const procBody = el("tbody");

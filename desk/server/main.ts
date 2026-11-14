@@ -16,6 +16,8 @@ import { processes, sysInfo, sysStats } from "./sys.ts";
 import * as term from "./term.ts";
 import * as files from "./files.ts";
 import * as sol from "./solana.ts";
+import * as apps from "./apps.ts";
+import net from "node:net";
 
 export const VERSION = "0.1.0";
 const HERE = path.dirname(new URL(import.meta.url).pathname);
@@ -83,6 +85,7 @@ function broadcast(event: string, data: unknown): void {
 }
 
 term.onTermEvent(broadcast);
+apps.onAppEvent(broadcast);
 
 const methods: Record<string, Method> = {
   hello: async () => ({ version: VERSION, sys: sysInfo(), tools: await sol.tools(), token: !!TOKEN }),
@@ -117,6 +120,10 @@ const methods: Record<string, Method> = {
   "sol.createKey": (p) => sol.createKey(String(p.name ?? "")),
   "sol.setDefaultKey": (p) => sol.setDefaultKey(String(p.path)),
   "sol.retireKey": (p) => sol.retireKey(String(p.path)),
+
+  "apps.list": (p) => ({ graphics: apps.graphics(), apps: apps.listApps(!!p?.fresh), sessions: apps.listSessions() }),
+  "apps.launch": (p) => apps.launch({ app: p.app, command: p.command, name: p.name, width: p.width, height: p.height }),
+  "apps.close": (p) => { apps.closeSession(Number(p.id), !!p.force); return true; },
 
   "val.status": () => sol.validatorStatus(),
   "val.start": (p) => { const s = sol.startValidator(p ?? {}); broadcast("val.status", s); return s; },
@@ -215,6 +222,17 @@ const server = http.createServer(async (req, res) => {
       res.writeHead(401, { "content-type": "application/json" }).end(JSON.stringify({ error: "the access token is missing or wrong" }));
       return;
     }
+    if (url.pathname === "/api/icon" && req.method === "GET") {
+      const file = apps.iconFile(url.searchParams.get("name") ?? "");
+      if (!file) {
+        // An application without a picture gets a plain one, so every icon address answers.
+        res.writeHead(200, { "content-type": "image/svg+xml", "cache-control": "max-age=600" }).end('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#8b929a" stroke-width="1.5" stroke-linecap="round"><rect x="4" y="5" width="16" height="14" rx="2.5"/><path d="M4 9.500h16M7 7.300h.01M9.500 7.300h.01"/></svg>');
+        return;
+      }
+      res.writeHead(200, { "content-type": file.endsWith(".svg") ? "image/svg+xml" : "image/png", "cache-control": "max-age=3600", "content-security-policy": "default-src 'none'; style-src 'unsafe-inline'" });
+      fs.createReadStream(file).pipe(res);
+      return;
+    }
     if (url.pathname === "/api/rpc" && req.method === "POST") {
       const out = await sol.rpcForward(url.searchParams.get("c") ?? "config", (await body(req, 4 * 1024 * 1024)).toString("utf8"));
       res.writeHead(out.status, { "content-type": "application/json" }).end(out.body);
@@ -248,12 +266,34 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
+/** Carries one application's display between its X server (a local TCP port) and the browser (a WebSocket). */
+function bridge(req: http.IncomingMessage, socket: import("node:stream").Duplex, head: Buffer, id: number): void {
+  const port = apps.sessionPort(id);
+  if (!port) { socket.end("HTTP/1.1 404 Not Found\r\nConnection: close\r\n\r\n"); return; }
+  const conn = accept(req, socket, head);
+  if (!conn) return;
+  const tcp = net.connect(port, "127.0.0.1");
+  tcp.setNoDelay(true);
+  (socket as net.Socket).setNoDelay?.(true);
+  tcp.on("data", (chunk: Buffer) => {
+    conn.sendBinary(chunk);
+    // A browser that cannot keep up makes the display wait, instead of this server holding the pictures.
+    if (conn.backlog > 8 * 1024 * 1024) { tcp.pause(); const t = setInterval(() => { if (conn.closed || conn.backlog < 1024 * 1024) { clearInterval(t); tcp.resume(); } }, 20); }
+  });
+  tcp.on("close", () => conn.close());
+  tcp.on("error", () => conn.close());
+  conn.onBinary = (data) => { tcp.write(data); };
+  conn.onClose = () => tcp.destroy();
+}
+
 server.on("upgrade", (req, socket, head) => {
   const url = new URL(req.url ?? "/", "http://desk");
-  if (url.pathname !== "/ws" || !sameSite(req) || !tokenOk(url.searchParams.get("t"))) {
+  const vnc = url.pathname.match(/^\/vnc\/(\d+)$/);
+  if ((url.pathname !== "/ws" && !vnc) || !sameSite(req) || !tokenOk(url.searchParams.get("t"))) {
     socket.end("HTTP/1.1 401 Unauthorized\r\nConnection: close\r\n\r\n");
     return;
   }
+  if (vnc) { bridge(req, socket, head, Number(vnc[1])); return; }
   const conn = accept(req, socket, head);
   if (conn) serve(conn);
 });
@@ -270,5 +310,5 @@ server.listen(PORT, HOST, () => {
 });
 
 for (const sig of ["SIGINT", "SIGTERM"] as const) {
-  process.on(sig, () => { term.closeAllTerms(); server.close(); setTimeout(() => process.exit(0), 200).unref(); });
+  process.on(sig, () => { term.closeAllTerms(); apps.closeAllSessions(); server.close(); setTimeout(() => process.exit(0), 200).unref(); });
 }

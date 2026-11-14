@@ -9,31 +9,27 @@
 <link rel="stylesheet" href="vendor/xterm/xterm.css">
 <link rel="stylesheet" href="style.css">
 <link rel="modulepreload" href="core.js">
-<link rel="modulepreload" href="vendor/xterm/xterm.mjs">
+<link rel="modulepreload" href="wm.js">
 </head>
 <body>
-<div id="app">
-  <nav id="rail" aria-label="Views">
-    <div class="logo" title="Solinux"><i></i></div>
-    <div id="rail-views"></div>
-    <div id="rail-foot"></div>
-  </nav>
-  <header id="bar">
-    <div class="bar-left">
-      <span id="brand-name" class="brand">Solinux</span>
-      <span class="sep">/</span>
-      <h1 id="title"></h1>
+<div id="shell">
+  <header id="panel">
+    <div class="panel-left">
+      <button id="brand" class="brand" title="Applications"><span class="logo"><i></i></span><span>Solinux</span></button>
+      <span id="title" class="panel-title"></span>
     </div>
-    <div class="bar-right">
-      <button id="palette-btn" class="pill ghost" title="Commands (Ctrl+K)"><span class="icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg></span><span class="hide-narrow">Commands</span><kbd>Ctrl K</kbd></button>
+    <div class="panel-right">
+      <button id="palette-btn" class="pill ghost" title="Commands (Ctrl+K, or Ctrl+Shift+Space anywhere)"><span class="icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg></span><span class="hide-narrow">Commands</span></button>
       <button id="cluster" class="pill" title="The Solana cluster this system talks to"></button>
       <button id="key" class="pill" title="The key the command-line tools use"></button>
       <span id="host" class="host mono hide-narrow"></span>
+      <span id="clock" class="clock"></span>
     </div>
   </header>
-  <main id="views"></main>
+  <nav id="dock" aria-label="Applications"></nav>
+  <main id="desktop"></main>
 </div>
 <div id="veil" hidden></div>
-<script type="module" src="app.js"></script>
+<script type="module" src="desktop.js"></script>
 </body>
 </html>

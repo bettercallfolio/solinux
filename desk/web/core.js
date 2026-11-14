@@ -12,7 +12,10 @@ export function el(tag, props, ...children) {
     if (k === "class") node.className = v;
     else if (k === "text") node.textContent = v;
     else if (k === "html") node.innerHTML = v;
-    else if (k === "style" && typeof v === "object") Object.assign(node.style, v);
+    else if (k === "style" && typeof v === "object") {
+      // custom properties (--tint) can only be set by name
+      for (const [name, value] of Object.entries(v)) { if (name.startsWith("--")) node.style.setProperty(name, value); else node.style[name] = value; }
+    }
     else if (k === "data") Object.assign(node.dataset, v);
     else if (k.startsWith("on") && typeof v === "function") node.addEventListener(k.slice(2), v);
     else if (k in node && k !== "list" && k !== "form") node[k] = v;

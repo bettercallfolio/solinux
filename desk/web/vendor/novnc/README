@@ -1,0 +1,2 @@
+noVNC 1.7.0 (https://github.com/novnc/noVNC): the core library (core/, MPL 2.0) and the copy of pako it uses
+(vendor/pako, MIT), copied unchanged from the release archive. See LICENSE.txt.

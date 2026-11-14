@@ -124,6 +124,7 @@ export default {
         if (active !== null) select(active);
       },
       hide() { visible = false; },
+      focus() { if (active !== null) open_.get(active)?.view.focus(); },
     };
   },
 };

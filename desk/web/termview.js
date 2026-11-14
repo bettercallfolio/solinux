@@ -74,8 +74,8 @@ export function termView(parent, id, { readOnly = false, fontSize = 13.5 } = {})
     if (mod && (e.key === "C" || (e.key === "c" && term.hasSelection() && !e.shiftKey && e.metaKey))) { copyText(term.getSelection()); return false; }
     if (mod && e.shiftKey && e.key === "V") { navigator.clipboard?.readText().then((t) => t && term.paste(t)).catch(() => {}); return false; }
     // Keys that belong to the desk, not to the program in the terminal.
-    if (mod && (e.key === "k" || e.key === "K" || e.key === "`")) return false;
-    if (e.altKey && /^[1-7]$/.test(e.key)) return false;
+    if (mod && e.key === "`") return false;
+    if (e.altKey && e.key === "`") return false;
     return true;
   });
 
