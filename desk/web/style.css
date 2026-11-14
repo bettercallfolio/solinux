@@ -363,7 +363,7 @@ code.wrap { overflow-wrap: anywhere; font-size: 12.5px; background: var(--inset)
 .ev-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-left: 4px; }
 .ev-stage { flex: 1; min-height: 0; position: relative; overflow: hidden; display: grid; place-items: center; background: var(--inset); cursor: default; touch-action: none; }
 .ev-stage.dark { background: #000; } .ev-stage.grabbing { cursor: grabbing; }
-.ev-img { max-width: none; transform-origin: center; user-select: none; will-change: transform; image-rendering: auto; background: repeating-conic-gradient(var(--raised) 0 25%, var(--panel) 0 50%) 0 0 / 16px 16px; }
+.ev-img { position: absolute; left: 50%; top: 50%; max-width: none; transform-origin: center; user-select: none; will-change: transform; image-rendering: auto; background: repeating-conic-gradient(var(--raised) 0 25%, var(--panel) 0 50%) 0 0 / 16px 16px; }
 .ev-media { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 230px; }
 .ev-video { width: 100%; height: 100%; background: #000; outline: none; } .ev-video.audio { height: 54px; align-self: center; background: none; }
 .ev-queue { border-left: 1px solid var(--line); overflow: auto; padding: 6px; display: flex; flex-direction: column; gap: 2px; background: var(--bg); }

@@ -56,7 +56,7 @@ export const images = {
     root.tabIndex = 0;
 
     let list = [], at = 0, scale = 1, fitted = true, x = 0, y = 0;
-    function place() { img.style.transform = `translate(${x}px, ${y}px) scale(${scale})`; }
+    function place() { img.style.transform = `translate(-50%, -50%) translate(${x}px, ${y}px) scale(${scale})`; }
     function fit() {
       fitted = true; x = 0; y = 0;
       const sw = stage.clientWidth - 24, sh = stage.clientHeight - 24;
