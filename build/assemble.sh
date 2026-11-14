@@ -35,6 +35,7 @@ for stage in "$@"; do
     sudo install -d "$root/var/lib/solinux/pkg/$pkg"
     sudo install -m644 "$WORK/packages/$pkg.files" "$root/var/lib/solinux/pkg/$pkg/files"
     sudo install -m644 "$WORK/packages/$pkg.version" "$root/var/lib/solinux/pkg/$pkg/version"
+    echo "$stage" | sudo tee "$root/var/lib/solinux/pkg/$pkg/set" > /dev/null
     count=$((count + 1))
   done
 done
