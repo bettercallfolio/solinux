@@ -98,10 +98,15 @@ let chainOpen: Promise<Chain> | null = null;
 function rpcEndpoints(network: string): string[] {
   if (process.env.CHAINBOOT_RPC) return process.env.CHAINBOOT_RPC.split(",").map((u) => u.trim()).filter(Boolean);
   const home = process.env.CHAINBOOT_HOME ?? path.join(process.env.HOME ?? "/root", ".chainboot");
-  try {
-    const c = JSON.parse(fs.readFileSync(path.join(home, "config.json"), "utf8"));
-    return (c.rpcs?.[network] ?? []).filter((u: unknown) => typeof u === "string");
-  } catch { return []; }
+  // this system's own endpoints, or, in a machine that chainboot started, the endpoints of the
+  // person who runs it (chainboot puts them in /run/chainboot/config.json)
+  for (const file of [path.join(home, "config.json"), "/run/chainboot/config.json"]) {
+    try {
+      const urls = (JSON.parse(fs.readFileSync(file, "utf8")).rpcs?.[network] ?? []).filter((u: unknown) => typeof u === "string");
+      if (urls.length) return urls;
+    } catch { /* no such file */ }
+  }
+  return [];
 }
 
 function chain(repo: string): Promise<Chain> {
