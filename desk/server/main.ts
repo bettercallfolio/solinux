@@ -18,6 +18,7 @@ import * as files from "./files.ts";
 import * as sol from "./solana.ts";
 import * as apps from "./apps.ts";
 import * as packages from "./packages.ts";
+import * as projects from "./projects.ts";
 import net from "node:net";
 
 export const VERSION = "0.1.0";
@@ -125,6 +126,10 @@ const methods: Record<string, Method> = {
   "apps.list": (p) => ({ graphics: apps.graphics(), apps: apps.listApps(!!p?.fresh), sessions: apps.listSessions() }),
   "apps.launch": (p) => apps.launch({ app: p.app, command: p.command, name: p.name, width: p.width, height: p.height, scale: p.scale }),
   "apps.close": (p) => { apps.closeSession(Number(p.id), !!p.force); return true; },
+
+  "proj.list": () => projects.listProjects(),
+  "proj.create": async (p) => projects.createRustProject(String(p.name ?? ""), (await sol.tools()).find((t) => t.name === "solana")?.version ?? null),
+  "proj.command": (p) => projects.projectCommand(p.action, String(p.path ?? ""), { program: p.program, name: p.name }),
 
   "pkg.list": () => packages.packages(),
   "pkg.command": (p) => packages.changeCommand(p.action, (p.names ?? []).map(String)),

@@ -15,6 +15,7 @@ import validator from "./views/validator.js";
 import explorer from "./views/explorer.js";
 import wallets from "./views/wallets.js";
 import software from "./views/software.js";
+import programs from "./views/programs.js";
 import { images, media, documents, calculator } from "./views/everyday.js";
 import text from "./views/text.js";
 import welcome from "./views/welcome.js";
@@ -28,6 +29,7 @@ const APPS = [
   { ...validator, tint: "#d9b676", w: 1080, h: 700 },
   { ...explorer, tint: "#7fc7c9", w: 1000, h: 700 },
   { ...wallets, tint: "#e5a98f", w: 900, h: 600 },
+  { ...programs, tint: "#8fb4d9", w: 1040, h: 700 },
   { ...software, tint: "#c9a7e0", w: 940, h: 660 },
   // Everyday applications: in the launcher, and in the dock while they are open.
   { ...welcome, tint: "#86c7a4", w: 760, h: 560, extra: true },
