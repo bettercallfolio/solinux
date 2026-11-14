@@ -100,11 +100,14 @@ run_recipe() {
   )
 }
 
-# run_stage <stage>: every recipe of the stage, in the order of its file names.
+# run_stage <stage> [from] [to]: the recipes of the stage in the order of their file names;
+# with numbers, only those whose number lies between them (run_stage solana 0 19).
 run_stage() {
-  local stage=$1 f
+  local stage=$1 from=${2:-0} to=${3:-9999} f n
   for f in "$REPO/recipes/$stage"/*.sh; do
+    n=$(basename "$f"); n=$((10#${n%%-*}))
+    [ "$n" -ge "$from" ] && [ "$n" -le "$to" ] || continue
     run_recipe "$stage" "$f"
   done
-  say "stage $stage: complete"
+  say "stage $stage${2:+ ($from to $to)}: complete"
 }
