@@ -5,4 +5,12 @@ HOST=127.0.0.1
 PORT=7654
 [ -r /etc/solinux/desk.conf ] && . /etc/solinux/desk.conf
 export SOLINUX_DESK_HOST="$HOST" SOLINUX_DESK_PORT="$PORT"
+# A system that was never set up talks to devnet, where SOL is free: the Solana tools on their
+# own would start on mainnet. (Changed in the desktop's panel, or with "solana config set".)
+_c="${HOME:-/root}/.config/solana/cli/config.yml"
+if [ ! -e "$_c" ] && mkdir -p "${_c%/*}" 2>/dev/null; then
+  printf '%s\n' '---' 'json_rpc_url: https://api.devnet.solana.com' "websocket_url: ''" \
+    "keypair_path: ${HOME:-/root}/.config/solana/id.json" 'address_labels:' \
+    "  '11111111111111111111111111111111': System Program" 'commitment: confirmed' > "$_c"
+fi
 exec node /usr/lib/solinux/desk/server/main.ts "$@"
