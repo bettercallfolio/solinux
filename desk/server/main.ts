@@ -176,6 +176,15 @@ const TYPES: Record<string, string> = {
   ".ico": "image/x-icon", ".woff2": "font/woff2", ".txt": "text/plain; charset=utf-8",
 };
 
+/** The kinds of file the desktop shows itself, by the end of their name. Everything else is only ever downloaded. */
+const SHOWN: Record<string, string> = {
+  ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".gif": "image/gif", ".webp": "image/webp", ".avif": "image/avif",
+  ".bmp": "image/bmp", ".ico": "image/x-icon", ".svg": "image/svg+xml",
+  ".mp4": "video/mp4", ".m4v": "video/mp4", ".webm": "video/webm", ".mkv": "video/x-matroska", ".mov": "video/quicktime", ".ogv": "video/ogg",
+  ".mp3": "audio/mpeg", ".ogg": "audio/ogg", ".oga": "audio/ogg", ".opus": "audio/ogg", ".wav": "audio/wav", ".flac": "audio/flac", ".m4a": "audio/mp4", ".aac": "audio/aac",
+  ".pdf": "application/pdf",
+};
+
 function sendStatic(req: http.IncomingMessage, res: http.ServerResponse, urlPath: string): void {
   const rel = urlPath === "/" ? "index.html" : decodeURIComponent(urlPath.slice(1));
   const file = path.join(WEB, rel);
@@ -186,7 +195,7 @@ function sendStatic(req: http.IncomingMessage, res: http.ServerResponse, urlPath
   const headers: Record<string, string> = {
     "content-type": TYPES[path.extname(file)] ?? "application/octet-stream",
     etag: tag, "cache-control": "no-cache", "x-content-type-options": "nosniff", "referrer-policy": "no-referrer",
-    "content-security-policy": "default-src 'self'; connect-src 'self' ws: wss:; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; frame-ancestors 'none'",
+    "content-security-policy": "default-src 'self'; connect-src 'self' ws: wss:; img-src 'self' data: blob:; media-src 'self' blob:; frame-src 'self'; style-src 'self' 'unsafe-inline'; frame-ancestors 'self'",
   };
   if (req.headers["if-none-match"] === tag) { res.writeHead(304, headers).end(); return; }
   res.writeHead(200, { ...headers, "content-length": String(st.size) });
@@ -246,10 +255,25 @@ const server = http.createServer(async (req, res) => {
       const file = files.resolvePath(url.searchParams.get("path") ?? "");
       const st = fs.statSync(file);
       if (!st.isFile()) throw new Error("that is not a file");
-      res.writeHead(200, {
-        "content-type": "application/octet-stream", "content-length": String(st.size),
-        "content-disposition": `attachment; filename*=UTF-8''${encodeURIComponent(path.basename(file))}`,
-      });
+      // Shown inside the desktop (pictures, sound, video, PDF) or handed over as a download.
+      const kind = url.searchParams.get("inline") === "1" ? SHOWN[path.extname(file).toLowerCase()] : undefined;
+      const headers: Record<string, string> = {
+        "content-type": kind ?? "application/octet-stream", "accept-ranges": "bytes", "x-content-type-options": "nosniff", "cache-control": "no-store",
+        "content-disposition": `${kind ? "inline" : "attachment"}; filename*=UTF-8''${encodeURIComponent(path.basename(file))}`,
+      };
+      // A picture made of markup (SVG) could carry a script: it is shown, but nothing in it may run.
+      if (kind === "image/svg+xml") headers["content-security-policy"] = "default-src 'none'; style-src 'unsafe-inline'; sandbox";
+      const range = req.headers.range?.match(/^bytes=(\d*)-(\d*)$/);
+      if (range && (range[1] || range[2])) {
+        // Part of a file: how a player jumps to the middle of a long video.
+        const start = range[1] ? Number(range[1]) : Math.max(0, st.size - Number(range[2]));
+        const end = range[1] && range[2] ? Math.min(Number(range[2]), st.size - 1) : st.size - 1;
+        if (start > end || start >= st.size) { res.writeHead(416, { "content-range": `bytes */${st.size}` }).end(); return; }
+        res.writeHead(206, { ...headers, "content-range": `bytes ${start}-${end}/${st.size}`, "content-length": String(end - start + 1) });
+        fs.createReadStream(file, { start, end }).pipe(res);
+        return;
+      }
+      res.writeHead(200, { ...headers, "content-length": String(st.size) });
       fs.createReadStream(file).pipe(res);
       return;
     }
