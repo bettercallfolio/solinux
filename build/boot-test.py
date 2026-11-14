@@ -59,6 +59,10 @@ qemu = [
     "-drive", f"file={disk},format=raw,if=virtio",
     "-netdev", "user,id=n0", "-device", "virtio-net-pci,netdev=n0",
 ]
+# A shell that was opened before its user joined the kvm group does not have the group yet: take it for this command.
+if not os.access("/dev/kvm", os.R_OK | os.W_OK):
+    import shlex
+    qemu = ["sg", "kvm", "-c", shlex.join(qemu)]
 t0 = time.time()
 p = subprocess.Popen(qemu, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 log = open(log_path, "wb")
@@ -101,6 +105,8 @@ for i, cmd in enumerate(commands):
     if text is None:
         print(f"FAILED (no answer): {cmd}"); failed.append(cmd); break
     # the echoed command line comes first; what follows is the command's output
+    # (the shell marks its output with invisible terminal sequences: they are taken out)
+    text = re.sub(r"\x1b\][^\x07\x1b]*(\x07|\x1b\\\\)|\x1b\[[0-9;?]*[A-Za-z]", "", text)
     lines = [l.rstrip() for l in text.replace("\r", "").split("\n")]
     body = "\n".join(l for l in lines[1:] if l.strip())
     code = re.search(rb"__done_%d__(\d+)" % i, log_tail := open(log_path, "rb").read()[-4000:])
