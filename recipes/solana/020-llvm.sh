@@ -16,4 +16,7 @@ build() {
     -D CLANG_CONFIG_FILE_SYSTEM_DIR=/etc/clang -W no-author -G Ninja ..
   ninja
   DESTDIR="$DEST" ninja install
+  # The static copies of LLVM, clang and lld (over 400 MB) are not part of the system: programs
+  # link the shared libraries (compiler-rt's own static libraries, under lib/clang, stay).
+  rm -f "${DEST:?}"/usr/lib/libLLVM*.a "${DEST:?}"/usr/lib/libclang*.a "${DEST:?}"/usr/lib/liblld*.a
 }
