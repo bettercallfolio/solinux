@@ -15,6 +15,7 @@ import validator from "./views/validator.js";
 import explorer from "./views/explorer.js";
 import wallets from "./views/wallets.js";
 import software from "./views/software.js";
+import { images, media, documents, calculator } from "./views/everyday.js";
 import settings from "./views/settings.js";
 
 // The desktop's own applications. `tint` colours the icon; w and h are the first size of the window.
@@ -26,6 +27,11 @@ const APPS = [
   { ...explorer, tint: "#7fc7c9", w: 1000, h: 700 },
   { ...wallets, tint: "#e5a98f", w: 900, h: 600 },
   { ...software, tint: "#c9a7e0", w: 940, h: 660 },
+  // Everyday applications: in the launcher, and in the dock while they are open.
+  { ...images, tint: "#8fd0a8", w: 900, h: 640, extra: true },
+  { ...media, tint: "#e5a98f", w: 900, h: 600, extra: true },
+  { ...documents, tint: "#d9b676", w: 900, h: 760, extra: true },
+  { ...calculator, tint: "#9fb8e8", w: 340, h: 520, extra: true },
   { ...settings, tint: "#9aa3ad", w: 820, h: 680 },
 ];
 const made = new Map();   // id -> { root, api }
@@ -89,7 +95,7 @@ function paintDock() {
   fill(dock,
     el("button", { class: "dock-btn launcher-btn", title: "Applications", "aria-label": "Applications", onclick: () => launcher() }, el("span", { class: "tile plain" }, icon("grid", 22))),
     el("hr"),
-    APPS.filter((a) => a.id !== "settings").map((a) => {
+    APPS.filter((a) => a.id !== "settings" && (!a.extra || findWindow(`app-${a.id}`))).map((a) => {
       const win = findWindow(`app-${a.id}`);
       return dockButton({
         key: a.id, title: a.title, node: tile(a), running: !!win, active: !!win && focus === win,

@@ -358,6 +358,31 @@ code.wrap { overflow-wrap: anywhere; font-size: 12.5px; background: var(--inset)
 .key-address { font-size: 13px; }
 .key-side { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
 
+/* ---------------------------------------------------------------- everyday applications */
+
+.ev-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-left: 4px; }
+.ev-stage { flex: 1; min-height: 0; position: relative; overflow: hidden; display: grid; place-items: center; background: var(--inset); cursor: default; touch-action: none; }
+.ev-stage.dark { background: #000; } .ev-stage.grabbing { cursor: grabbing; }
+.ev-img { max-width: none; transform-origin: center; user-select: none; will-change: transform; image-rendering: auto; background: repeating-conic-gradient(var(--raised) 0 25%, var(--panel) 0 50%) 0 0 / 16px 16px; }
+.ev-media { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 230px; }
+.ev-video { width: 100%; height: 100%; background: #000; outline: none; } .ev-video.audio { height: 54px; align-self: center; background: none; }
+.ev-queue { border-left: 1px solid var(--line); overflow: auto; padding: 6px; display: flex; flex-direction: column; gap: 2px; background: var(--bg); }
+.ev-queue button { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 7px; text-align: left; color: var(--dim); min-width: 0; }
+.ev-queue button span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; }
+.ev-queue button:hover { background: var(--hover); color: var(--text); } .ev-queue button.on { background: var(--accent-soft); color: var(--text); }
+.ev-frame { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: #fff; }
+@container (max-width: 560px) { .ev-media { grid-template-columns: 1fr; grid-template-rows: 1fr auto; } .ev-queue { border-left: 0; border-top: 1px solid var(--line); max-height: 130px; } }
+.calc { flex: 1; min-height: 0; display: flex; flex-direction: column; padding: 12px; gap: 8px; }
+.calc-tape { flex: 1; min-height: 0; overflow: auto; display: flex; flex-direction: column-reverse; gap: 2px; }
+.calc-line { display: flex; justify-content: space-between; gap: 12px; padding: 3px 6px; border-radius: 6px; font-size: 13px; } .calc-line:hover { background: var(--hover); }
+.calc-input { font-size: 24px !important; text-align: right; padding: 8px 12px !important; }
+.calc-result { min-height: 22px; text-align: right; color: var(--dim); padding: 0 4px; }
+.calc-pad { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.calc-key { height: 42px; border-radius: 10px; background: var(--raised); border: 1px solid var(--line); font-size: 16px; transition: background .1s, transform .06s; }
+.calc-key:hover { background: var(--hover); } .calc-key:active { transform: scale(.95); }
+.calc-key.op { color: var(--accent); } .calc-key.equals { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 700; }
+.calc-key.wide { grid-column: span 2; } .calc-key.dim-key { color: var(--dim); font-size: 14px; }
+
 /* ---------------------------------------------------------------- software */
 
 .pkg-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }

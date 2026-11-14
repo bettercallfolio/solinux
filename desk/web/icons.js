@@ -47,5 +47,9 @@ export const ICONS = {
   app: '<rect x="4" y="5" width="16" height="14" rx="2.5"/><path d="M4 9.5h16M7 7.3h.01M9.5 7.3h.01"/>',
   package: '<path d="M12 3.5 20 8v8l-8 4.5L4 16V8z"/><path d="M4 8l8 4.5L20 8M12 12.5v8M8 5.8l8 4.4"/>',
   monitor: '<rect x="3.5" y="4.5" width="17" height="11.5" rx="2"/><path d="M9 20h6M12 16v4"/>',
+  image: '<rect x="3.5" y="5" width="17" height="14" rx="2.2"/><circle cx="8.5" cy="10" r="1.6"/><path d="m5 17.5 5-5 3.5 3.5 2.5-2.5 3.5 3.5"/>',
+  left: '<path d="m15 6-6 6 6 6"/>',
+  music: '<path d="M9.5 17.5V6l9-1.5v11"/><circle cx="7" cy="17.5" r="2.5"/><circle cx="16" cy="15.5" r="2.5"/>',
+  calc: '<rect x="5.5" y="3.5" width="13" height="17" rx="2.2"/><path d="M8.5 7.5h7M8.5 12h.01M12 12h.01M15.5 12h.01M8.5 15.5h.01M12 15.5h.01M15.5 15.5h.01"/>',
   sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3 7 7M17 17l1.7 1.7M18.7 5.3 17 7M7 17l-1.7 1.7"/>',
 };

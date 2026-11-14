@@ -7,7 +7,9 @@ build() {
   meson setup .. --prefix=/usr --buildtype=release -D default-dnssec=no -D firstboot=false \
     -D install-tests=false -D ldconfig=false -D sysusers=false -D rpmmacrosdir=no -D homed=disabled \
     -D man=disabled -D mode=release -D pamconfdir=no -D dev-kvm-mode=0660 -D nobody-group=nogroup \
-    -D sysupdate=disabled -D ukify=disabled -D bootloader=enabled
+    -D sysupdate=disabled -D ukify=disabled -D bootloader=enabled \
+    -D sbat-distro=solinux -D sbat-distro-summary=Solinux -D sbat-distro-pkgname=systemd-boot \
+    -D sbat-distro-version=261.2 -D sbat-distro-url=https://chainboot.dev
   ninja
   DESTDIR="$DEST" ninja install
   mkdir -p "$DEST/usr/share/man"

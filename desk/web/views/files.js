@@ -1,6 +1,7 @@
 // Files: browse the system, and edit text files in place.
 
 import { el, icon, call, attempt, dialog, confirmDialog, menu, toast, bytes, ago, copyText, fileUrl, store, emptyState, session, fill } from "../core.js";
+import { opener } from "./everyday.js";
 
 const IMAGES = /\.(png|jpe?g|gif|webp|svg|ico|bmp)$/i;
 const join = (dir, name) => (dir === "/" ? `/${name}` : `${dir}/${name}`);
@@ -87,12 +88,30 @@ export default {
       selected = name;
       for (const tr of body.children) tr.classList.toggle("sel", tr.dataset.name === name);
     }
-    function activate(e) { if (isDir(e)) open(join(dir, e.name)); else edit(join(dir, e.name)); }
+    // A double click opens a file with what suits it: pictures, music, video and PDF have applications of their own.
+    function activate(e) {
+      if (isDir(e)) open(join(dir, e.name));
+      else if (opener(e.name)) go(opener(e.name), { path: join(dir, e.name) });
+      else edit(join(dir, e.name));
+    }
+    const ARCHIVE = /\.(zip|tar|tgz|tar\.(gz|xz|bz2|zst)|txz|tbz2)$/i;
+    // Packing and unpacking run as the commands they are, in a terminal, so nothing about them is hidden.
+    function extract(e) {
+      go("terminal", { cwd: dir, title: `unpack ${e.name}`, argv: /\.zip$/i.test(e.name) ? ["unzip", "-o", e.name] : ["tar", "-xvf", e.name] });
+      setTimeout(load, 1500);
+    }
+    function compress(e) {
+      go("terminal", { cwd: dir, title: `pack ${e.name}`, argv: ["tar", "-czvf", `${e.name}.tar.gz`, e.name] });
+      setTimeout(load, 1500);
+    }
 
     function rowMenu(anchor, e) {
       const path = join(dir, e.name);
       menu(anchor, [
-        { label: isDir(e) ? "Open" : "Open in the editor", icon: isDir(e) ? "folder" : "edit", run: () => activate(e) },
+        { label: "Open", icon: isDir(e) ? "folder" : "app", run: () => activate(e) },
+        !isDir(e) && opener(e.name) && { label: "Open in the editor", icon: "edit", run: () => edit(path) },
+        !isDir(e) && ARCHIVE.test(e.name) && { label: "Unpack here", icon: "package", run: () => extract(e) },
+        { label: "Pack into an archive", icon: "package", run: () => compress(e) },
         isDir(e) && { label: "Terminal here", icon: "terminal", run: () => go("terminal", { cwd: path }) },
         !isDir(e) && { label: "Download", icon: "download", run: () => download(path) },
         { label: "Rename", icon: "edit", keys: "F2", run: () => rename(e) },
