@@ -333,7 +333,7 @@ server.on("upgrade", (req, socket, head) => {
 // Another program (or another Solinux machine on the same computer) may hold the port: the next
 // free one is taken instead, unless a port was asked for by name.
 let port = PORT;
-const portGiven = process.argv.includes("--port") || !!process.env.SOLINUX_DESK_PORT;
+const portGiven = process.argv.includes("--port");
 const URL_FILE = path.join(os.homedir(), ".local", "state", "solinux", "desk.url");
 
 server.on("error", (e: NodeJS.ErrnoException) => {

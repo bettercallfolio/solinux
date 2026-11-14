@@ -4,4 +4,5 @@
 HOST=127.0.0.1
 PORT=7654
 [ -r /etc/solinux/desk.conf ] && . /etc/solinux/desk.conf
-exec node /usr/lib/solinux/desk/server/main.ts --host "$HOST" --port "$PORT" "$@"
+export SOLINUX_DESK_HOST="$HOST" SOLINUX_DESK_PORT="$PORT"
+exec node /usr/lib/solinux/desk/server/main.ts "$@"
