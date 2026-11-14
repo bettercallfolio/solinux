@@ -197,7 +197,7 @@ async function launcher() {
   input.addEventListener("input", () => { at = 0; paint(); });
   input.addEventListener("keydown", (e) => {
     if (e.key === "Escape") closeLauncher();
-    else if (e.key === "Enter" && shown[at]) { const i = shown[at]; closeLauncher(); i.run(); }
+    else if (e.key === "Enter" && shown[at]) { e.preventDefault(); const i = shown[at]; closeLauncher(); i.run(); }   // (the key must not also reach the application that opens)
     else if (e.key === "ArrowRight" || e.key === "ArrowDown") { e.preventDefault(); at = (at + 1) % Math.max(1, shown.length); grid.children[at]?.classList.add("on"); [...grid.children].forEach((b, n) => b.classList.toggle("on", n === at)); }
     else if (e.key === "ArrowLeft" || e.key === "ArrowUp") { e.preventDefault(); at = (at + shown.length - 1) % Math.max(1, shown.length); [...grid.children].forEach((b, n) => b.classList.toggle("on", n === at)); }
   });
