@@ -86,6 +86,13 @@ def desktop_entry(text):
     return {"name": entry["Name"], "icon": entry.get("Icon", ""), "comment": entry.get("Comment", entry.get("GenericName", ""))}
 
 
+# One line about each package for people; a package not listed is described by its recipe's first comment line.
+SUMMARIES = {}
+for line in open(os.path.join(HERE, "summaries.txt")):
+    m = re.match(r"^([^#\s:][^:]*):\s+(.+)$", line.rstrip())
+    if m:
+        SUMMARIES[m.group(1)] = m.group(2)
+
 packages, order = {}, []
 for stage in stages:
     for recipe in sorted(glob.glob(os.path.join(REPO_SRC, "recipes", stage, "*.sh"))):
@@ -101,8 +108,13 @@ for stage in stages:
         # the summary: the first comment line under the pkg= line
         lines = text.split("\n")
         summary = lines[1][2:].strip() if len(lines) > 1 and lines[1].startswith("# ") else ""
+        # "Geany: a small, fast editor." reads "A small, fast editor" beside the name; otherwise the first sentence
+        named = re.match(r"^[\w .+-]{1,24}:\s+(\S.*)$", summary)
+        if named:
+            summary = named.group(1)[0].upper() + named.group(1)[1:]
         summary = re.split(r"(?<=[.:])\s", summary)[0].rstrip(".:")
         extra = re.search(r'^deps="([^"]*)"', text, re.M)
+        summary = SUMMARIES.get(name, summary)
         packages[name] = {"version": ver, "summary": summary, "set": stage, "explicit": extra.group(1).split() if extra else [], "tar": tar}
         order.append(name)
 

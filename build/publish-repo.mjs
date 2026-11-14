@@ -66,7 +66,9 @@ for (const [pkg, p] of todo) {
   fs.writeFileSync(statePath, JSON.stringify(state, null, 1));   // after every package: an interrupted run loses nothing
 }
 
-const onChain = { format: 1, name: index.name, updated: new Date().toISOString(), packages: Object.fromEntries(chosen.map(([pkg, p]) => [pkg, { ...p, ref: state[p.sha256] }])) };
+const onChain = { format: 1, name: index.name, updated: new Date().toISOString(), 
+  // every package whose archive is on chain, not only the ones of this run: a run that adds a package takes none away
+  packages: Object.fromEntries(Object.entries(index.packages).filter(([, p]) => state[p.sha256]).map(([pkg, p]) => [pkg, { ...p, ref: state[p.sha256] }])) };
 const indexRef = await store.put(key, Buffer.from(JSON.stringify(onChain)), { journalDir });
 const tag = sdk.tagAddress("solinux-pkg", key.publicKey, name);
 await store.putPointer(key, tag, Buffer.from(JSON.stringify({ index: indexRef })));

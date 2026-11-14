@@ -1,0 +1,187 @@
+# One line about every package, for people: what `pkg` and the Software application show.
+# <package>: <summary>     (a package that is not listed here is described by the first
+# comment line of its recipe)
+
+# ---- base
+base-files: The directories and first files every Solinux system starts from
+man-pages: Manual pages for the Linux programming interfaces
+iana-etc: The names of network services and protocols
+glibc: The C library every program runs on
+zlib: Compression library (deflate)
+bzip2: The bzip2 compressor and its library
+xz: The xz compressor and its library
+lz4: A very fast compressor and its library
+zstd: The Zstandard compressor and its library
+file: Tells what kind of file something is
+readline: Line editing and history for command lines
+pcre2: Perl-style regular expressions for programs
+m4: A macro processor used by build tools
+bc: A calculator language for the command line
+flex: Generates programs that recognise patterns in text
+ninja: A small, fast build system
+pkgconf: Tells build tools where libraries are and how to use them
+binutils: The linker, the assembler and tools for program files
+gmp: Arithmetic on numbers of any size
+mpfr: Floating-point arithmetic of any precision
+mpc: Complex-number arithmetic of any precision
+attr: Extended attributes of files
+acl: Access control lists of files
+libcap: Linux capabilities for programs
+libxcrypt: Password hashing
+shadow: Tools for users, groups and passwords
+gawk: The awk text-processing language
+gcc: The GNU compilers for C and C++
+gcc-check: A check that the system's compiler makes programs for this system
+ncurses: Text interfaces in the terminal
+sed: The stream editor
+psmisc: pstree, killall and friends
+gettext: Tools and library for translated messages
+bison: A parser generator
+grep: Searches text for patterns
+bash: The shell
+libtool: Helps build tools make shared libraries
+gdbm: A simple key-value database library
+gperf: Generates perfect hash functions
+expat: A library that reads XML
+inetutils: hostname, ping, telnet, ftp and other basic network tools
+less: A pager: look through text a screen at a time
+perl: The Perl language
+autoconf: Makes configure scripts
+automake: Makes Makefiles for configure scripts
+openssl: TLS and cryptography, as a library and a tool
+libelf: Reads and writes ELF program files
+libffi: Lets programs call functions they learn about at run time
+sqlite: A whole SQL database in one library and one tool
+mpdecimal: Decimal floating-point arithmetic
+python: The Python language
+flit-core: Builds Python packages
+packaging: Python library for package versions and names
+wheel: Python's package format
+setuptools: Builds and installs Python packages
+meson: A build system
+kmod: Loads and lists kernel modules
+coreutils: ls, cp, mv, cat and the other basic commands
+diffutils: Shows the differences between files
+findutils: find and xargs
+groff: Formats text, used for manual pages
+gzip: The gzip compressor
+iproute2: ip, ss, tc: network configuration and inspection
+kbd: Keyboard layouts and fonts for the console
+libpipeline: A library for running pipelines of programs
+make: Runs the commands that build software
+patch: Applies changes to source files
+tar: Makes and unpacks tar archives
+texinfo: The GNU documentation system
+vim: The Vim editor
+markupsafe: Python library for safe HTML strings
+jinja2: Python's template engine
+pyelftools: Python library that reads ELF files
+systemd: Starts and supervises the system and its services
+dbus: The message bus programs talk over
+man-db: The man command
+procps-ng: ps, top, free and other process tools
+util-linux: mount, fdisk, lsblk and many other system tools
+e2fsprogs: Tools for ext4 file systems
+ca-certificates: The certificate authorities the system trusts
+nghttp2: The HTTP/2 library
+curl: Transfers data with URLs, as a tool and a library
+git: The version control system
+openssh: The SSH client and server
+sudo: Runs a command as another user
+nano: A small, friendly editor for the terminal
+cpio: Makes and unpacks cpio archives
+dosfstools: Tools for FAT file systems
+mtools: Reads and writes FAT disks without mounting them
+which: Shows where a command is
+rsync: Copies and synchronises files, fast
+libevent: A library for programs that wait on many connections
+tmux: Several terminals in one, which keep running when you leave
+jq: Reads and reshapes JSON on the command line
+htop: Shows what is running, and lets you act on it
+zip: Makes zip archives
+libarchive: Reads and writes archives of every common kind (bsdtar, unzip)
+linux: The Linux kernel with the Solinux configuration
+system-config: How a Solinux system behaves when it boots
+initramfs: The first, small file system a booting kernel sees
+
+# ---- solana (the developer layer)
+node: Node.js, the JavaScript runtime (with npm)
+cmake: The CMake build system
+llvm: LLVM with clang and lld: compilers and tools, including the BPF target
+libssh2: SSH as a library (cargo and git transports use it)
+rust: The Rust compiler, cargo, clippy and rustfmt
+abseil: Google's C++ base libraries
+protobuf: Protocol Buffers: the compiler (protoc) and its library
+agave: Solana's command-line tools, validator, test validator and cargo build-sbf
+spl-token: The command-line tool for tokens
+anchor: The framework most Solana programs are written with
+chainboot: Stores whole systems on Solana and runs them
+pkg: Solinux's package manager: installs packages from a repository on chain
+
+# ---- desktop
+util-macros: Build macros of the X Window System
+xorgproto: The X Window System's protocol definitions
+libXau: X authorisation library
+libXdmcp: X display manager protocol library
+xcb-proto: Descriptions of the X protocol for XCB
+libxcb: The X protocol as a C library
+libpng: Reads and writes PNG pictures
+glib: The base library under GTK and most graphical programs
+freetype: Renders fonts
+harfbuzz: Shapes text: which glyphs, where
+fontconfig: Finds and configures fonts
+xtrans: Network transport code of the X libraries
+libX11: The core X Window System library
+libXext: Common X extensions
+libICE: Inter-client exchange library of X
+libSM: Session management library of X
+libXt: The X toolkit intrinsics
+libXmu: Miscellaneous X utilities
+libXpm: Reads and writes XPM pictures
+libXaw: The Athena widgets
+libXfixes: X fixes extension
+libXcomposite: X composite extension
+libXrender: X rendering extension
+libXcursor: Mouse cursors for X
+libXdamage: X damage extension
+libfontenc: Font encodings for X
+libXfont2: Font handling for X servers
+libXft: Fonts for X applications through FreeType
+libXi: X input extension (keyboards, mice, touch)
+libXinerama: Several screens as one for X
+libXrandr: Resize and rotate for X screens
+libXres: X resource usage extension
+libXtst: Test and record extensions of X
+libxkbfile: Reads keyboard descriptions for X
+libxshmfence: Shared-memory fences for X
+pixman: Low-level pixel drawing
+libjpeg-turbo: Reads and writes JPEG pictures, fast
+libxcvt: Calculates display modes
+nettle: A low-level cryptography library
+xkeyboard-config: The keyboard layouts of the world
+xkbcomp: Compiles keyboard descriptions
+font-util: Tools and macros for X fonts
+linux-pam: The authentication library (the display server is built against it)
+tigervnc: The display server every graphical application gets (Xvnc)
+fribidi: Text that runs in both directions
+libxml2: Reads and writes XML
+shared-mime-info: The database of file types
+cairo: 2D drawing library
+pango: Lays out and draws text
+at-spi2-core: Accessibility for applications
+gdk-pixbuf: Loads pictures for GTK
+libepoxy: Handles OpenGL function pointers
+libxkbcommon: Keyboard handling library
+hicolor-icon-theme: The fallback icon theme
+gsettings-desktop-schemas: Shared settings of desktop applications
+gtk3: The toolkit most Linux applications draw their windows with
+dejavu-fonts: The DejaVu fonts (sans, serif, monospace)
+cargo-c: Builds C libraries from Rust code
+librsvg: Draws SVG pictures (icons)
+adwaita-icon-theme: The icons applications use
+desktop-caches: The lists GTK, GLib and fontconfig read at start-up
+desk: The Solinux desktop, shown in a browser
+nasm: The Netwide Assembler
+alsa-lib: The sound library
+cbindgen: Makes C headers from Rust code
+firefox: The Firefox web browser
