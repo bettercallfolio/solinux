@@ -5,6 +5,9 @@ make_skeleton() {
   mkdir -p "$p"/{boot,home,mnt,opt,srv,etc,var,dev,proc,sys,run,usr}
   mkdir -p "$p"/usr/{bin,lib,sbin,include,src,libexec} "$p"/lib64
   for i in bin lib sbin; do [ -e "$p/$i" ] || ln -s usr/$i "$p/$i"; done
+  # Where every 64-bit program looks for the loader that starts it.
+  ln -sf ../lib/ld-linux-x86-64.so.2 "$p/lib64/ld-linux-x86-64.so.2"
+  ln -sf ../lib/ld-linux-x86-64.so.2 "$p/lib64/ld-lsb-x86-64.so.3"
   mkdir -p "$p"/etc/{opt,sysconfig} "$p"/usr/lib/{firmware,locale}
   mkdir -p "$p"/usr/local/{bin,lib,sbin,include,src}
   mkdir -p "$p"/usr/{,local/}share/{doc,info,locale,man,misc,terminfo,zoneinfo}
