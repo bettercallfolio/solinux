@@ -85,7 +85,7 @@ run_recipe() {
     mkdir -p "$WORK/state/$stage" "$WORK/logs/$stage" "$WORK/tmp"
     dir=$WORK/tmp/$stage-$pkg
     rm -rf "${dir:?}"; mkdir -p "$dir"; cd "$dir"
-    [ -z "$src" ] || tar -xf "$S/$src" --strip-components=1
+    [ -z "$src" ] || tar -xf "$S/$src" --strip-components=1 || { say "FAILED: $stage/$pkg (cannot unpack $src)"; exit 1; }
     if packaged "$stage"; then
       export DEST=$WORK/tmp/dest-$pkg
       rm -rf "${DEST:?}"; mkdir -p "$DEST"

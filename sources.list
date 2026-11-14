@@ -121,7 +121,7 @@ fac6e0401fca714780561a081b8f7e27c3bc1db34ebda4da175081f26b24d460 https://downloa
 a89b64a8b217a8042bdf0e35cbfab629ceee35640dba75df578afde9aa789d57 https://download.gnome.org/sources/at-spi2-core/2.60/at-spi2-core-2.60.6.tar.xz
 445ed8208a6e4823de1226a74ca319d3600e83f6369f99b14265006599c32ccb https://www.cairographics.org/releases/cairo-1.18.4.tar.xz
 91c6e0be34aa0ad26b7ef21ce21a390c95635e4e6e00b7a6ff07323f9af8550b https://github.com/lu-zero/cargo-c/archive/v0.10.24/cargo-c-0.10.24.tar.gz
-2a94ef2bd8b61049196611a1280b78ddb8d14eb288cbf06f8ea7251bb9396aa1 https://gitlab.freedesktop.org/api/v4/projects/890/packages/generic/fontconfig/2.18.3/fontconfig-2.18.3.tar.xz
+4f7b554a38cdf78c033f666c8871f3749e14a094f65a07f630c91ed0b43d35e3 https://gitlab.freedesktop.org/api/v4/projects/890/packages/generic/fontconfig/2.18.3/fontconfig-2.18.3.tar.xz
 36bc4f1cc413335368ee656c42afca65c5a3987e8768cc28cf11ba775e785a5f https://download.savannah.gnu.org/releases/freetype/freetype-2.14.3.tar.xz
 1b1cde5b235d40479e91be2f0e88a309e3214c8ab470ec8a2744d82a5a9ea05c https://github.com/fribidi/fribidi/releases/download/v1.0.16/fribidi-1.0.16.tar.xz
 172f80e3626ec31520a970400f1a3694e04718f6c2cd2885f75250fb5a6995a4 https://download.gnome.org/sources/gdk-pixbuf/2.44/gdk-pixbuf-2.44.7.tar.xz
@@ -167,7 +167,7 @@ d4a4df096aba96fea02c029ee3a44e11a47eb7f7213c1a729be83e85ec3fde10 https://www.x.o
 3addbc00da01846b232fb3bc453538ea5468da43033f21bb345cb1e9073f5094 https://ftpmirror.gnu.org/nettle/nettle-4.0.tar.gz
 342385b6ca3b7c73455d7c80a13b7dbe4489e00bc3bd4c5bd6ed4dce421e374a https://download.gnome.org/sources/pango/1.58/pango-1.58.2.tar.xz
 d09c44ebc3bd5bee7021c79f922fe8fb2fb57f7320f55e97ff9914d2346a591c https://www.cairographics.org/releases/pixman-0.46.4.tar.gz
-e94fd3590a49962ce32589830463b5809089be1bb5ba71c79f826a9e9e91ec27 https://gitlab.freedesktop.org/xdg/shared-mime-info/-/archive/2.5.1/shared-mime-info-2.5.1.tar.gz
+ea248ea157b7fa0165f4fe282c84919fa84c3f175553642f229c8f1ab7539128 https://gitlab.freedesktop.org/xdg/shared-mime-info/-/archive/2.5.1/shared-mime-info-2.5.1.tar.gz
 225388e7f3ea917dafab6bb57eaa02f3b50d655421e8e18d57feec8d3a7c5d11 https://www.linuxfromscratch.org/patches/blfs/13.1/tigervnc-1.16.2-configuration_fixes-1.patch
 b107c0c8b8a962594281690366c24186e95c2ea4a169acbc0076aa62ed01f467 https://github.com/TigerVNC/tigervnc/archive/v1.16.2/tigervnc-1.16.2.tar.gz
 9ac269eba24f672d7d7b3574e4be5f333d13f04a7712303b1821b2a51ac82e8e https://www.x.org/pub/individual/util/util-macros-1.20.2.tar.xz
