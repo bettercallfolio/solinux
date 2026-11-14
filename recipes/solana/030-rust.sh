@@ -26,7 +26,7 @@ llvm-bitcode-linker = false
 [target.x86_64-unknown-linux-gnu]
 llvm-config = "/usr/bin/llvm-config"
 X
-  export LIBSQLITE3_SYS_USE_PKG_CONFIG=1
+  export LIBSQLITE3_SYS_USE_PKG_CONFIG=1 LIBSSH2_SYS_USE_PKG_CONFIG=1
   ./x.py build
   DESTDIR="$DEST" ./x.py install
 }
