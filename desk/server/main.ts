@@ -326,17 +326,28 @@ server.on("upgrade", (req, socket, head) => {
   if (conn) serve(conn);
 });
 
+// Another program (or another Solinux machine on the same computer) may hold the port: the next
+// free one is taken instead, unless a port was asked for by name.
+let port = PORT;
+const portGiven = process.argv.includes("--port") || !!process.env.SOLINUX_DESK_PORT;
+const URL_FILE = path.join(os.homedir(), ".local", "state", "solinux", "desk.url");
+
 server.on("error", (e: NodeJS.ErrnoException) => {
-  console.error(e.code === "EADDRINUSE" ? `Port ${PORT} is already in use. Is the desk already running? Try --port.` : `The desk could not start: ${e.message}`);
+  if (e.code === "EADDRINUSE" && !portGiven && port < PORT + 20) { port++; server.listen(port, HOST); return; }
+  console.error(e.code === "EADDRINUSE" ? `Port ${port} is already in use. Is the desktop already running? Try --port.` : `The desktop could not start: ${e.message}`);
   process.exit(1);
 });
 
-server.listen(PORT, HOST, () => {
+server.on("listening", () => {
   const shown = HOST === "0.0.0.0" || HOST === "::" ? os.hostname() : HOST;
-  console.log(`Solinux Desk ${VERSION} is running. Open it here:\n\n  http://${shown}:${PORT}/${TOKEN ? `#token=${TOKEN}` : ""}\n`);
+  const address = `http://${shown}:${port}/${TOKEN ? `#token=${TOKEN}` : ""}`;
+  console.log(`Solinux Desk ${VERSION} is running. Open it here:\n\n  ${address}\n`);
   if (HOST !== "127.0.0.1" && HOST !== "localhost" && !TOKEN) console.log("Warning: anyone who can reach this address controls this system. Use the token.");
+  // Where the desktop is, for whoever asks later (a new shell prints it).
+  try { fs.mkdirSync(path.dirname(URL_FILE), { recursive: true }); fs.writeFileSync(URL_FILE, address + "\n", { mode: 0o600 }); } catch { /* a read-only home: the line above was the only notice */ }
 });
+server.listen(port, HOST);
 
 for (const sig of ["SIGINT", "SIGTERM"] as const) {
-  process.on(sig, () => { term.closeAllTerms(); apps.closeAllSessions(); server.close(); setTimeout(() => process.exit(0), 200).unref(); });
+  process.on(sig, () => { term.closeAllTerms(); apps.closeAllSessions(); try { fs.unlinkSync(URL_FILE); } catch { /* was never written */ } server.close(); setTimeout(() => process.exit(0), 200).unref(); });
 }
