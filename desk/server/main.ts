@@ -128,7 +128,7 @@ const methods: Record<string, Method> = {
   "apps.close": (p) => { apps.closeSession(Number(p.id), !!p.force); return true; },
 
   "proj.list": () => projects.listProjects(),
-  "proj.create": async (p) => projects.createRustProject(String(p.name ?? ""), (await sol.tools()).find((t) => t.name === "solana")?.version ?? null),
+  "proj.create": (p) => projects.createRustProject(String(p.name ?? "")),
   "proj.command": (p) => projects.projectCommand(p.action, String(p.path ?? ""), { program: p.program, name: p.name }),
 
   "pkg.list": () => packages.packages(),
@@ -256,7 +256,11 @@ const server = http.createServer(async (req, res) => {
       return;
     }
     if (url.pathname === "/api/rpc" && req.method === "POST") {
-      const out = await sol.rpcForward(url.searchParams.get("c") ?? "config", (await body(req, 4 * 1024 * 1024)).toString("utf8"));
+      const request = (await body(req, 4 * 1024 * 1024)).toString("utf8");
+      // A cluster that does not answer (a local validator that is not running) is an answer of
+      // its own, in the cluster's language: not a failed request for the browser to complain about.
+      const out = await sol.rpcForward(url.searchParams.get("c") ?? "config", request)
+        .catch((e: unknown) => ({ status: 200, body: JSON.stringify({ jsonrpc: "2.0", id: null, error: { code: -32000, message: `the cluster does not answer (${e instanceof Error ? e.message : String(e)})` } }) }));
       res.writeHead(out.status, { "content-type": "application/json" }).end(out.body);
       return;
     }

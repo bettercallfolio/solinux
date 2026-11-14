@@ -169,6 +169,37 @@ await step("window-snap-and-maximize", async () => {
   await page.dblclick(".win.focused .win-title"); await page.waitForTimeout(250);
 });
 
+// A program from nothing to the local cluster: only where the tools that build programs are installed.
+const tools = await desk("sol.tools", {});
+if (tools.some((t) => t.name === "cargo" && t.version)) {
+  const projectDir = `${(await desk("fs.list", { path: "~" })).path}/projects/gm-scenario`;
+  await step("program-create", async () => {
+    await desk("fs.remove", { path: projectDir }).catch(() => {});   // left by a run that did not finish
+    await open("programs");
+    await page.click(".proj-side-head .tool[title='New project']");
+    await page.fill(".dialog input[name=name]", "gm-scenario");
+    await page.selectOption(".dialog select[name=kind]", "rust");
+    await page.click(".dialog button[type=submit]");
+    await page.waitForSelector(".proj-head h2:has-text('gm-scenario')");
+  });
+  await step("program-build", async () => {
+    await page.click(".proj-head button:has-text('Build')");
+    // (the first build on a system also fetches Solana's platform tools)
+    await page.waitForFunction(() => /finished|ended/.test(document.querySelector(".proj-job header span")?.textContent ?? ""), null, { timeout: 600000 });
+    const status = await page.locator(".proj-job header span").innerText();
+    if (!/finished/.test(status)) throw new Error(`the build ${status}`);
+    await page.waitForSelector(".view-programs table tbody tr");
+  });
+  await step("program-deploy", async () => {
+    await page.click(".proj-head button:has-text('Deploy')");
+    await page.waitForFunction(() => /finished|ended/.test(document.querySelector(".proj-job header span")?.textContent ?? ""), null, { timeout: 180000 });
+    const status = await page.locator(".proj-job header span").innerText();
+    if (!/finished/.test(status)) throw new Error(`the deploy ${status}`);
+    await page.waitForSelector(".view-programs table .tag.good:has-text('deployed')", { timeout: 30000 });
+  });
+  await desk("fs.remove", { path: projectDir }).catch(() => {});
+}
+
 await step("settings-light", async () => {
   await open("settings");
   await page.click(".view-settings .seg button:has-text('Light')");

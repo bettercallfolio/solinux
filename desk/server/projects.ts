@@ -45,15 +45,32 @@ export function listProjects(): { root: string; projects: Project[] } {
 
 const NAME = /^[a-z][a-z0-9_-]{0,40}$/;
 
+/**
+ * The newest release of a crate, as "major.minor" (asked of crates.io), or "*" when it cannot
+ * be asked: the crates Solana programs are written with have version numbers of their own,
+ * apart from the tools'.
+ */
+async function newestCrate(crate: string): Promise<string> {
+  try {
+    const dir = crate.length <= 3 ? `${crate.length}` : `${crate.slice(0, 2)}/${crate.slice(2, 4)}`;
+    const res = await fetch(`https://index.crates.io/${dir}/${crate}`, { signal: AbortSignal.timeout(8000) });
+    if (!res.ok) return "*";
+    const versions = (await res.text()).split("\n").filter(Boolean).map((l) => JSON.parse(l) as { vers: string; yanked: boolean })
+      .filter((v) => !v.yanked && /^\d+\.\d+\.\d+$/.test(v.vers)).map((v) => v.vers.split(".").map(Number));
+    versions.sort((x, y) => x[0]! - y[0]! || x[1]! - y[1]! || x[2]! - y[2]!);
+    const top = versions.at(-1);
+    return top ? `${top[0]}.${top[1]}` : "*";
+  } catch { return "*"; }
+}
+
 /** A new plain Rust program: the smallest one that builds and can be called. */
-export function createRustProject(name: string, solanaVersion: string | null): Project {
+export async function createRustProject(name: string): Promise<Project> {
   if (!NAME.test(name)) throw new Error("a project name starts with a letter and uses small letters, digits, - and _");
   const dir = path.join(PROJECTS, name);
   if (fs.existsSync(dir)) throw new Error(`${name} already exists`);
   fs.mkdirSync(path.join(dir, "src"), { recursive: true });
   const crate = name.replace(/-/g, "_");
-  // the program library of the same line as the installed tools (4.3.2 -> "4.3"), or the newest
-  const dep = solanaVersion?.match(/^(\d+\.\d+)/)?.[1] ?? "*";
+  const dep = await newestCrate("solana-program");
   fs.writeFileSync(path.join(dir, "Cargo.toml"), `[package]
 name = "${name}"
 version = "0.1.0"
