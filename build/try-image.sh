@@ -57,9 +57,10 @@ case $action in
       [ "$(sudo readlink "$p/root" 2>/dev/null)" = "$m" ] && sudo kill -9 "${p#/proc/}" 2>/dev/null || true
     done
     for d in tmp run dev proc sys; do
-      mounted "$m/$d" && sudo umount -R "$m/$d" || true
+      # (lazily: /dev came with this computer's mounts below it, some of them in use elsewhere)
+      mounted "$m/$d" && sudo umount -R -l "$m/$d" || true
     done
-    mounted "$m" && sudo umount "$m" || true
+    mounted "$m" && sudo umount -l "$m" || true
     echo "$name is stopped. What it wrote is in $t/upper."
     ;;
   *) echo "usage: try-image.sh <name> start|sh|stop"; exit 1 ;;
