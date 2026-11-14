@@ -124,8 +124,9 @@ for name in order:
                 continue
             installed += member.size
             path = member.name.lstrip("./")
-            if path.startswith("usr/share/applications/") and path.endswith(".desktop") and not app:
-                app = desktop_entry(t.extractfile(member).read().decode("utf-8", "replace"))
+            if path.startswith("usr/share/applications/") and path.endswith(".desktop") and (not app or os.path.basename(path) == name + ".desktop"):
+                # (a package with several entries is shown by the one that carries its own name)
+                app = desktop_entry(t.extractfile(member).read().decode("utf-8", "replace")) or app
             elif member.size > 64 and (path.startswith(("usr/bin/", "usr/sbin/", "usr/libexec/")) or ".so" in os.path.basename(path)):
                 f = t.extractfile(member)
                 if f.read(4) == ELF:
