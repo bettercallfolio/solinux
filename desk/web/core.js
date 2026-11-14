@@ -283,11 +283,11 @@ export function dialog({ title, body, fields = [], ok = "OK", cancel = "Cancel",
     });
     document.addEventListener("keydown", key, true);
     document.body.append(shade);
-    requestAnimationFrame(() => {
-      shade.classList.add("in");
-      (Object.values(inputs)[0] ?? form.querySelector("button[type=submit]")).focus();
-      Object.values(inputs)[0]?.select?.();
-    });
+    // The first field has the keyboard at once. (Not a frame later: on a busy page that frame
+    // can come after the person has moved on to the next field, and would pull them back.)
+    (Object.values(inputs)[0] ?? form.querySelector("button[type=submit]")).focus();
+    Object.values(inputs)[0]?.select?.();
+    requestAnimationFrame(() => shade.classList.add("in"));
   });
 }
 export const confirmDialog = (title, body, ok = "OK", danger = false) => dialog({ title, body, ok, danger }).then((v) => v !== null);

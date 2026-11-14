@@ -181,7 +181,8 @@ async function launcher() {
     el("div", { class: "launch-search" }, icon("search", 18), input), grid, note);
   document.body.append(box);
   launcherOpen = box;
-  requestAnimationFrame(() => { box.classList.add("in"); input.focus(); });
+  input.focus();   // (at once: what is typed right away must land here)
+  requestAnimationFrame(() => box.classList.add("in"));
 
   let native = [], graphics = { ready: true, missing: [] }, at = 0, shown = [];
   const items = () => [

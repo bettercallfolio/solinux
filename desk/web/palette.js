@@ -52,7 +52,8 @@ export function palette() {
   document.body.append(shade);
   open = shade;
   paint();
-  requestAnimationFrame(() => { shade.classList.add("in"); input.focus(); });
+  input.focus();   // (at once: what is typed right away must land here)
+  requestAnimationFrame(() => shade.classList.add("in"));
 }
 
 function close() {
