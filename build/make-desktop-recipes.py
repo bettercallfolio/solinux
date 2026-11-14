@@ -163,6 +163,20 @@ fc-cache -f -s
 cp -a /var/cache/fontconfig/. "$DEST/var/cache/fontconfig/" 2>/dev/null || true
 """); n += 1
 
+# ---- the desktop itself
+write(290, "desk", "0.1.0", "", """
+install -d "$DEST/usr/lib/solinux/desk/bin" "$DEST/usr/bin" "$DEST/usr/lib/systemd/system" "$DEST/etc/profile.d" "$DEST/etc/solinux" \\
+  "$DEST/etc/systemd/system/multi-user.target.wants"
+cp -r "$REPO/desk/server" "$REPO/desk/web" "$REPO/desk/package.json" "$DEST/usr/lib/solinux/desk/"
+gcc -O2 -o "$DEST/usr/lib/solinux/desk/bin/solinux-pty" "$REPO/desk/pty/solinux-pty.c" -lutil
+gcc -O2 -o "$DEST/usr/lib/solinux/desk/bin/solinux-wm" "$REPO/desk/wm/solinux-wm.c" -lX11
+install -m755 "$REPO/desk/system/solinux-desk" "$DEST/usr/bin/solinux-desk"
+install -m644 "$REPO/desk/system/desk.conf" "$DEST/etc/solinux/desk.conf"
+install -m644 "$REPO/desk/system/profile.sh" "$DEST/etc/profile.d/solinux-desk.sh"
+install -m644 "$REPO/desk/system/solinux-desk.service" "$DEST/usr/lib/systemd/system/solinux-desk.service"
+ln -s /usr/lib/systemd/system/solinux-desk.service "$DEST/etc/systemd/system/multi-user.target.wants/solinux-desk.service"
+""", "The Solinux desktop: the server, the page a browser shows, and its two small helpers\n(one gives a terminal to a command, one arranges the windows of a graphical application).")
+
 # ---- applications
 n = 300
 autotools(n, "geany", "2.1", "geany-2.1.tar.bz2", "--prefix=/usr --disable-html-docs --disable-pdf-docs --disable-api-docs",

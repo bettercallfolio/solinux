@@ -1,0 +1,13 @@
+[Unit]
+Description=Solinux desktop (shown in a browser)
+After=network.target
+
+[Service]
+Environment=HOME=/root
+WorkingDirectory=/root
+ExecStart=/usr/bin/solinux-desk
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,7 @@
+#!/bin/sh
+# Starts the Solinux desktop (the server a browser connects to).
+# Where it listens is set in /etc/solinux/desk.conf; options given here win.
+HOST=127.0.0.1
+PORT=7654
+[ -r /etc/solinux/desk.conf ] && . /etc/solinux/desk.conf
+exec node /usr/lib/solinux/desk/server/main.ts --host "$HOST" --port "$PORT" "$@"
