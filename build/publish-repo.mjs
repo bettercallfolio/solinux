@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Puts the package repository on chain.
 //
-//   publish-repo.mjs --keypair <file> [--sets apps] [--name main] [--network devnet] [--yes]
+//   publish-repo.mjs --keypair <file> [--sets apps | --packages a,b] [--name main] [--network devnet] [--yes]
 //
 // Every archive of the chosen sets is stored with chainboot (once: what is already on chain
 // is not sent again), then the index, then a pointer that names the newest index. `pkg`
@@ -36,7 +36,8 @@ if (!urls.length) { console.error(`no RPC endpoint for ${network}: chainboot rpc
 const index = JSON.parse(fs.readFileSync(path.join(repoDir, "index.json"), "utf8"));
 const statePath = path.join(repoDir, `published-${network}.json`);
 const state = fs.existsSync(statePath) ? JSON.parse(fs.readFileSync(statePath, "utf8")) : {};   // sha256 -> ref
-const chosen = Object.entries(index.packages).filter(([, p]) => sets.includes(p.set) || sets.includes("all"));
+const only = opt("packages", "");   // instead of whole sets: --packages a,b,c
+const chosen = Object.entries(index.packages).filter(([pkg, p]) => (only ? only.split(",").includes(pkg) : sets.includes(p.set) || sets.includes("all")));
 if (!chosen.length) { console.error(`the repository in ${repoDir} has no package in ${sets.join(", ")}`); process.exit(1); }
 
 const todo = chosen.filter(([, p]) => !state[p.sha256]);
