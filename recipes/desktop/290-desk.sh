@@ -10,6 +10,7 @@ build() {
   install -m755 "$REPO/desk/system/solinux-desk" "$DEST/usr/bin/solinux-desk"
   install -m644 "$REPO/desk/system/desk.conf" "$DEST/etc/solinux/desk.conf"
   install -m644 "$REPO/desk/system/profile.sh" "$DEST/etc/profile.d/solinux-desk.sh"
+  install -Dm755 "$REPO/desk/system/chainboot-start" "$DEST/etc/chainboot/start"
   install -m644 "$REPO/desk/system/solinux-desk.service" "$DEST/usr/lib/systemd/system/solinux-desk.service"
   ln -s /usr/lib/systemd/system/solinux-desk.service "$DEST/etc/systemd/system/multi-user.target.wants/solinux-desk.service"
 }

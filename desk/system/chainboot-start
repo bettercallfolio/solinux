@@ -1,0 +1,6 @@
+#!/bin/sh
+# chainboot runs this whenever a machine made from Solinux starts. A machine that was not
+# booted has no service manager, so the desktop is brought up here.
+export HOME=/root PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin LANG=C.UTF-8
+[ -x /usr/bin/solinux-desk ] && command -v node >/dev/null 2>&1 || exit 0
+exec /usr/bin/solinux-desk
