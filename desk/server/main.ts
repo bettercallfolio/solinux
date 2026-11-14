@@ -129,6 +129,10 @@ const methods: Record<string, Method> = {
   "pkg.list": () => packages.packages(),
   "pkg.command": (p) => packages.changeCommand(p.action, (p.names ?? []).map(String)),
 
+  "chain.endpoints": () => sol.chainEndpoints(),
+  "chain.addEndpoint": async (p) => { await sol.addChainEndpoint(String(p.url ?? "").trim()); return sol.chainEndpoints(); },
+  "chain.removeEndpoint": async (p) => { await sol.removeChainEndpoint(Number(p.index)); return sol.chainEndpoints(); },
+
   "val.status": () => sol.validatorStatus(),
   "val.start": (p) => { const s = sol.startValidator(p ?? {}); broadcast("val.status", s); return s; },
   "val.stop": async () => { const s = await sol.stopValidator(); broadcast("val.status", s); return s; },

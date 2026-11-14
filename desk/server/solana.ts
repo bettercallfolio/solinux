@@ -299,3 +299,41 @@ export function validatorOutput(max = 16 * 1024): string {
 }
 
 export function validatorLogFile(): string { return path.join(validatorStatus().ledger, "validator.log"); }
+
+// ---------------------------------------------------------------- chainboot's RPC endpoints
+
+// chainboot and pkg read the chain through the endpoints kept in chainboot's settings. The
+// desktop shows them without their keys and changes them through chainboot itself.
+
+const CHAINBOOT_CONFIG = path.join(process.env.CHAINBOOT_HOME ?? path.join(HOME, ".chainboot"), "config.json");
+
+function masked(url: string): string {
+  try { const u = new URL(url); return `${u.protocol}//${u.host}${u.pathname.length > 1 || u.search ? "/…" : ""}`; } catch { return "(not an address)"; }
+}
+
+export function chainEndpoints(): { installed: boolean; network: string; endpoints: { index: number; shown: string }[] } {
+  let network = "devnet", urls: string[] = [];
+  try {
+    const c = JSON.parse(fs.readFileSync(CHAINBOOT_CONFIG, "utf8"));
+    network = typeof c.cluster === "string" ? c.cluster : "devnet";
+    urls = Array.isArray(c.rpcs?.[network]) ? c.rpcs[network] : [];
+  } catch { /* no settings yet */ }
+  return { installed: which("chainboot") !== null, network, endpoints: urls.map((u, index) => ({ index, shown: masked(u) })) };
+}
+
+export async function addChainEndpoint(url: string): Promise<string> {
+  if (!/^https?:\/\/\S+$/.test(url)) throw new Error("an RPC address starts with http:// or https://");
+  const r = await run("chainboot", ["rpc", "add", url], 30_000);
+  if (!r.ok) throw new Error(r.out.trim().split("\n").pop() || "chainboot could not add the endpoint");
+  return r.out.trim();
+}
+
+export async function removeChainEndpoint(index: number): Promise<void> {
+  // by position, so that the address (with its key) never has to travel to the page
+  const c = JSON.parse(fs.readFileSync(CHAINBOOT_CONFIG, "utf8"));
+  const network = typeof c.cluster === "string" ? c.cluster : "devnet";
+  const url = c.rpcs?.[network]?.[index];
+  if (typeof url !== "string") throw new Error("that endpoint is no longer in the list");
+  const r = await run("chainboot", ["rpc", "remove", url], 30_000);
+  if (!r.ok) throw new Error(r.out.trim().split("\n").pop() || "chainboot could not remove the endpoint");
+}

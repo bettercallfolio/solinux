@@ -8,10 +8,11 @@ export default {
   create(root, { applyTheme, go }) {
     const look = el("section", { class: "card" });
     const cluster = el("section", { class: "card" });
+    const chain = el("section", { class: "card" });
     const system = el("section", { class: "card" });
     const tools = el("section", { class: "card" });
     const about = el("section", { class: "card" });
-    root.append(el("div", { class: "page narrow" }, look, cluster, system, tools, about));
+    root.append(el("div", { class: "page narrow" }, look, cluster, chain, system, tools, about));
 
     function paintLook() {
       const now = store.get("theme", "auto");
@@ -33,6 +34,21 @@ export default {
           el("div", { class: "row grow" }, input, el("button", { class: "btn", type: "submit" }, "Save"))),
         el("div", { class: "setting" }, el("div", null, el("b", { text: "Key in use" }), el("p", { class: "dim small mono", text: c.keypairPath })),
           el("button", { class: "btn", onclick: () => go("wallets") }, "Keys")));
+    }
+
+    // The endpoints chainboot and pkg read the chain through (packages and systems are stored there).
+    async function paintChain() {
+      const c = await call("chain.endpoints").catch(() => null);
+      if (!c) return;
+      const input = el("input", { type: "text", placeholder: "https://your-endpoint.example/your-key", spellcheck: false, autocomplete: "off", "aria-label": "RPC address" });
+      fill(chain, el("header", null, el("h2", { text: "Chain storage" }), el("span", { class: "dim small", text: c.network })),
+        el("p", { class: "dim small", text: "Packages and whole systems are read from Solana through RPC endpoints. With none of your own, the network's public endpoint is used, which is slow. A free endpoint from any provider makes installing fast." }),
+        c.endpoints.length ? el("table", { class: "table" }, el("tbody", null, c.endpoints.map((e) => el("tr", null,
+          el("td", { class: "mono", text: e.shown }),
+          el("td", { class: "r" }, el("button", { class: "btn small", onclick: async () => { if (await attempt(() => call("chain.removeEndpoint", { index: e.index }), "Removed")) paintChain(); } }, "Remove"))))))
+          : el("p", { class: "dim", text: c.installed ? "No endpoint of your own yet." : "chainboot is not installed on this system." }),
+        c.installed && el("form", { class: "setting", onsubmit: async (e) => { e.preventDefault(); if (await attempt(() => call("chain.addEndpoint", { url: input.value }), "Endpoint added")) paintChain(); } },
+          el("div", { class: "row grow" }, input, el("button", { class: "btn", type: "submit" }, "Add"))));
     }
 
     function paintSystem() {
@@ -68,6 +84,6 @@ export default {
     on("state", () => { paintCluster(); paintTools(); });
     on("connected", paintSystem);
     paintLook(); paintCluster(); paintSystem(); paintTools();
-    return { show() { refreshConfig().catch(() => {}); } };
+    return { show() { refreshConfig().catch(() => {}); paintChain(); } };
   },
 };
