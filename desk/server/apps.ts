@@ -10,7 +10,9 @@ import os from "node:os";
 import path from "node:path";
 
 export interface App { id: string; name: string; comment: string; icon: string; exec: string; categories: string[]; terminal: boolean; file: string }
-export interface Session { id: number; app: string; name: string; icon: string; title: string; width: number; height: number; started: number; windows: number }
+export interface Session { id: number; app: string; name: string; icon: string; title: string; width: number; height: number; started: number; windows: number;
+  /** How many pixels of the display one unit of the browser window gets (2 on a high-density screen). */
+  scale: number }
 
 interface Running extends Session { xvnc: ChildProcess; wm: ChildProcess | null; child: ChildProcess | null; ended: boolean; childGone: boolean; everHadWindow: boolean }
 
@@ -115,7 +117,7 @@ export function iconFile(name: string): string | null {
 
 // ---------------------------------------------------------------- running them
 
-const publicView = (s: Running): Session => ({ id: s.id, app: s.app, name: s.name, icon: s.icon, title: s.title, width: s.width, height: s.height, started: s.started, windows: s.windows });
+const publicView = (s: Running): Session => ({ id: s.id, app: s.app, name: s.name, icon: s.icon, title: s.title, width: s.width, height: s.height, started: s.started, windows: s.windows, scale: s.scale });
 export function listSessions(): Session[] { return [...sessions.values()].filter((s) => !s.ended).map(publicView); }
 export function sessionPort(id: number): number | null { const s = sessions.get(id); return s && !s.ended ? 5900 + id : null; }
 
@@ -134,7 +136,7 @@ function command(exec: string): string {
   return exec.replace(/%%/g, "\u0000").replace(/\s*%[a-zA-Z]/g, "").replace(/\u0000/g, "%").trim();
 }
 
-export interface LaunchOptions { app?: string; command?: string; name?: string; width?: number; height?: number }
+export interface LaunchOptions { app?: string; command?: string; name?: string; width?: number; height?: number; scale?: number }
 
 export async function launch(o: LaunchOptions): Promise<Session> {
   const g = graphics();
@@ -143,16 +145,18 @@ export async function launch(o: LaunchOptions): Promise<Session> {
   if (o.app && !app) throw new Error(`no application "${o.app}" is installed`);
   const cmd = app ? command(app.exec) : String(o.command ?? "").trim();
   if (!cmd) throw new Error("nothing to run");
-  const width = Math.max(320, Math.min(7680, Math.floor(o.width ?? 1000))), height = Math.max(240, Math.min(4320, Math.floor(o.height ?? 700)));
+  // On a high-density screen the application draws with more pixels (sharp text), not on a bigger area.
+  const scale = Math.max(1, Math.min(3, Math.round((Number(o.scale) || 1) * 4) / 4));
+  const width = Math.max(320, Math.min(7680, Math.floor((o.width ?? 1000) * scale))), height = Math.max(240, Math.min(4320, Math.floor((o.height ?? 700) * scale)));
   const id = freeDisplay();
   const display = `:${id}`;
 
-  const xvnc = spawn("Xvnc", [display, "-geometry", `${width}x${height}`, "-depth", "24", "-dpi", "96", "-SecurityTypes", "None", "-localhost",
+  const xvnc = spawn("Xvnc", [display, "-geometry", `${width}x${height}`, "-depth", "24", "-dpi", String(Math.round(96 * scale)), "-SecurityTypes", "None", "-localhost",
     "-rfbport", String(5900 + id), "-AlwaysShared", "-AcceptSetDesktopSize", "-desktop", app?.name ?? o.name ?? cmd, "-nolisten", "tcp", "-FrameRate", "60"],
   { stdio: ["ignore", "ignore", "ignore"] });
   const s: Running = {
     id, app: app?.id ?? "", name: app?.name ?? o.name ?? cmd.split(/\s+/)[0]!, icon: app?.icon ?? "", title: app?.name ?? o.name ?? cmd,
-    width, height, started: Date.now(), windows: 0, xvnc, wm: null, child: null, ended: false, childGone: false, everHadWindow: false,
+    width, height, started: Date.now(), windows: 0, scale, xvnc, wm: null, child: null, ended: false, childGone: false, everHadWindow: false,
   };
   sessions.set(id, s);
   xvnc.on("exit", () => end(s));
@@ -164,6 +168,7 @@ export async function launch(o: LaunchOptions): Promise<Session> {
   const runtime = process.env.XDG_RUNTIME_DIR && fs.existsSync(process.env.XDG_RUNTIME_DIR) ? process.env.XDG_RUNTIME_DIR : fs.mkdtempSync(path.join(os.tmpdir(), "solinux-run-"));
   const env: NodeJS.ProcessEnv = { ...process.env, DISPLAY: display, GDK_BACKEND: "x11", QT_QPA_PLATFORM: "xcb", XDG_SESSION_TYPE: "x11", NO_AT_BRIDGE: "1", XDG_RUNTIME_DIR: runtime };
   delete env.WAYLAND_DISPLAY;
+  if (scale >= 2) { env.GDK_SCALE = String(Math.floor(scale)); env.QT_SCALE_FACTOR = String(scale); env.XCURSOR_SIZE = String(24 * Math.floor(scale)); }
 
   const wm = spawn(helper("solinux-wm")!, [], { env, stdio: ["ignore", "pipe", "ignore"] });
   s.wm = wm;

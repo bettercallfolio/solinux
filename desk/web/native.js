@@ -8,6 +8,18 @@ import { openWindow, findWindow } from "./wm.js";
 
 const shown = new Map();   // session id -> { win, rfb }
 
+/**
+ * noVNC shows one pixel of the remote display per unit of the page, which is blurred on a
+ * high-density screen. This asks for a display `density` times the size of the window and
+ * shows it at 1/density: one remote pixel per pixel of the screen.
+ */
+class SharpRFB extends RFB {
+  constructor(target, url, options, density) { super(target, url, options); this.density = density; }
+  _screenSize() { const s = super._screenSize(); const d = this.density ?? 1; return { w: Math.round(s.w * d), h: Math.round(s.h * d) }; }
+  _updateScale() { this._display.scale = 1 / (this.density ?? 1); this._fixScrollbars(); }
+}
+const density = () => Math.max(1, Math.min(3, Math.round((window.devicePixelRatio || 1) * 4) / 4));
+
 /** The picture of an application's icon, or a drawn stand-in when it has none. */
 export function appIcon(name, size = 20) {
   if (!name) return icon("app", size);
@@ -25,7 +37,7 @@ function show(s) {
 
   const win = openWindow({
     id: `native-${s.id}`, app: `native:${s.app || s.name}`, keep: `native:${s.app || s.name}`, title: s.title || s.name, iconNode: appIcon(s.icon, 16),
-    width: s.width, height: s.height + 38,
+    width: Math.round(s.width / (s.scale || 1)), height: Math.round(s.height / (s.scale || 1)) + 38,
     onClose() {
       // The application decides: it may first ask about unsaved work. The window goes when the application has gone.
       call("apps.close", { id: s.id }).catch(() => {});
@@ -54,7 +66,7 @@ function show(s) {
   function connect() {
     if (!shown.has(s.id)) return;
     const url = `${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/vnc/${s.id}?t=${session.token}`;
-    rfb = new RFB(stage, url, { shared: true });
+    rfb = new SharpRFB(stage, url, { shared: true }, s.scale || 1);
     rfb.resizeSession = true;      // the display follows the size of this window
     rfb.scaleViewport = false;
     rfb.clipViewport = false;
@@ -96,13 +108,13 @@ on("app.closed", (e) => gone(e.id));
 /** Starts an installed application (by the name of its .desktop file) and shows it. */
 export async function launchApp(appId, name) {
   const w = Math.min(1100, Math.round(innerWidth * 0.62)), h = Math.min(760, Math.round(innerHeight * 0.66));
-  const s = await attempt(() => call("apps.launch", { app: appId, width: w, height: h }));
+  const s = await attempt(() => call("apps.launch", { app: appId, width: w, height: h, scale: density() }));
   if (s) show(s);
   else if (name) console.warn(`${name} did not start`);
 }
 
 export async function runCommand(command) {
-  const s = await attempt(() => call("apps.launch", { command, width: 900, height: 600 }));
+  const s = await attempt(() => call("apps.launch", { command, width: 900, height: 600, scale: density() }));
   if (s) show(s);
 }
 
