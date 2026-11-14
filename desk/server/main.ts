@@ -320,14 +320,13 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
-/** Carries one application's display between its X server (a local TCP port) and the browser (a WebSocket). */
+/** Carries one application's display between its X server (a socket file) and the browser (a WebSocket). */
 function bridge(req: http.IncomingMessage, socket: import("node:stream").Duplex, head: Buffer, id: number): void {
-  const port = apps.sessionPort(id);
-  if (!port) { socket.end("HTTP/1.1 404 Not Found\r\nConnection: close\r\n\r\n"); return; }
+  const display = apps.sessionSocket(id);
+  if (!display) { socket.end("HTTP/1.1 404 Not Found\r\nConnection: close\r\n\r\n"); return; }
   const conn = accept(req, socket, head);
   if (!conn) return;
-  const tcp = net.connect(port, "127.0.0.1");
-  tcp.setNoDelay(true);
+  const tcp = net.connect({ path: display });
   (socket as net.Socket).setNoDelay?.(true);
   tcp.on("data", (chunk: Buffer) => {
     conn.sendBinary(chunk);

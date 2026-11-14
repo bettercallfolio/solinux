@@ -6,6 +6,7 @@
 
 import { spawn, type ChildProcess } from "node:child_process";
 import fs from "node:fs";
+import net from "node:net";
 import os from "node:os";
 import path from "node:path";
 
@@ -124,11 +125,36 @@ export function iconFile(name: string): string | null {
 
 const publicView = (s: Running): Session => ({ id: s.id, app: s.app, name: s.name, icon: s.icon, title: s.title, width: s.width, height: s.height, started: s.started, windows: s.windows, scale: s.scale });
 export function listSessions(): Session[] { return [...sessions.values()].filter((s) => !s.ended).map(publicView); }
-export function sessionPort(id: number): number | null { const s = sessions.get(id); return s && !s.ended ? 5900 + id : null; }
+/**
+ * Where an application's display is reached: a socket file only this user can open, in a
+ * directory of this desktop's own. (Not a TCP port: every program on the computer could
+ * connect to one, and machines that share the computer's network would fight over it.)
+ */
+let rfbDir: string | null = null;
+function rfbSocket(id: number): string {
+  rfbDir ??= fs.mkdtempSync(path.join(os.tmpdir(), "solinux-desk-"));
+  return path.join(rfbDir, `display-${id}`);
+}
+export function sessionSocket(id: number): string | null { const s = sessions.get(id); return s && !s.ended ? rfbSocket(id) : null; }
 
-function freeDisplay(): number {
+/** Whether something answers on a socket address. */
+function answers(address: string): Promise<boolean> {
+  return new Promise((resolve) => {
+    const c = net.connect({ path: address });
+    c.once("connect", () => { c.destroy(); resolve(true); });
+    c.once("error", () => resolve(false));
+  });
+}
+
+/**
+ * A display number nobody uses. Besides this system's own files, the abstract socket of that
+ * number is tried: it belongs to the network, which a machine shares with the computer it runs
+ * on (and with other machines), and an application would connect to it before anything else.
+ */
+async function freeDisplay(): Promise<number> {
   for (let n = 20; n < 100; n++) {
     if (sessions.has(n) || fs.existsSync(`/tmp/.X11-unix/X${n}`) || fs.existsSync(`/tmp/.X${n}-lock`)) continue;
+    if (await answers(`\0/tmp/.X11-unix/X${n}`)) continue;
     return n;
   }
   throw new Error("too many graphical applications are open");
@@ -171,24 +197,31 @@ export async function launch(o: LaunchOptions): Promise<Session> {
   // On a high-density screen the application draws with more pixels (sharp text), not on a bigger area.
   const scale = Math.max(1, Math.min(3, Math.round((Number(o.scale) || 1) * 4) / 4));
   const width = Math.max(320, Math.min(7680, Math.floor((o.width ?? 1000) * scale))), height = Math.max(240, Math.min(4320, Math.floor((o.height ?? 700) * scale)));
-  const id = freeDisplay();
+  let id = await freeDisplay();
+  while (sessions.has(id)) id = await freeDisplay();   // (another launch took the number while this one was looking)
   const display = `:${id}`;
 
-  const xvnc = spawn("Xvnc", [display, "-geometry", `${width}x${height}`, "-depth", "24", "-dpi", String(Math.round(96 * scale)), "-SecurityTypes", "None", "-localhost",
-    "-rfbport", String(5900 + id), "-AlwaysShared", "-AcceptSetDesktopSize", "-desktop", app?.name ?? o.name ?? cmd, "-nolisten", "tcp", "-FrameRate", "60"],
+  // The display listens on its socket file for the desktop and on a file in /tmp/.X11-unix for
+  // the application: no TCP port, and no abstract socket (those are shared with the network).
+  const sock = rfbSocket(id);
+  try { fs.unlinkSync(sock); } catch { /* none was left */ }
+  const xvnc = spawn("Xvnc", [display, "-geometry", `${width}x${height}`, "-depth", "24", "-dpi", String(Math.round(96 * scale)), "-SecurityTypes", "None",
+    "-rfbport", "-1", "-rfbunixpath", sock, "-rfbunixmode", "0600", "-AlwaysShared", "-AcceptSetDesktopSize", "-desktop", app?.name ?? o.name ?? cmd,
+    "-nolisten", "tcp", "-nolisten", "local", "-FrameRate", "60"],
   { stdio: ["ignore", "ignore", "ignore"] });
   const s: Running = {
     id, app: app?.id ?? "", name: app?.name ?? o.name ?? cmd.split(/\s+/)[0]!, icon: app?.icon ?? "", title: app?.name ?? o.name ?? cmd,
     width, height, started: Date.now(), windows: 0, scale, xvnc, wm: null, child: null, ended: false, childGone: false, everHadWindow: false, asked: false,
   };
   sessions.set(id, s);
-  xvnc.on("exit", () => end(s));
-  xvnc.on("error", () => end(s));
+  xvnc.on("exit", () => { if (!s.everHadWindow) s.asked = true; end(s); });   // (the launch reports a display that never came up)
+  xvnc.on("error", () => { s.asked = true; end(s); });
 
   // The display is there when its socket is. Usually within a moment; on a machine whose files
   // are fetched from the chain as they are read, the first one of a session can take much longer.
-  for (let i = 0; i < 1200 && !fs.existsSync(`/tmp/.X11-unix/X${id}`); i++) { if (s.ended) break; await wait(50); }
-  if (s.ended || !fs.existsSync(`/tmp/.X11-unix/X${id}`)) { s.asked = true; end(s); throw new Error("the display for the application could not be started"); }
+  const up = () => fs.existsSync(`/tmp/.X11-unix/X${id}`) && fs.existsSync(sock);
+  for (let i = 0; i < 1200 && !up(); i++) { if (s.ended) break; await wait(50); }
+  if (s.ended || !up()) { s.asked = true; end(s); throw new Error("the display for the application could not be started"); }
 
   const runtime = process.env.XDG_RUNTIME_DIR && fs.existsSync(process.env.XDG_RUNTIME_DIR) ? process.env.XDG_RUNTIME_DIR : fs.mkdtempSync(path.join(os.tmpdir(), "solinux-run-"));
   const env: NodeJS.ProcessEnv = { ...process.env, DISPLAY: display, GDK_BACKEND: "x11", QT_QPA_PLATFORM: "xcb", XDG_SESSION_TYPE: "x11", NO_AT_BRIDGE: "1", XDG_RUNTIME_DIR: runtime };
