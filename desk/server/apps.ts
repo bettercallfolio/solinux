@@ -185,8 +185,10 @@ export async function launch(o: LaunchOptions): Promise<Session> {
   xvnc.on("exit", () => end(s));
   xvnc.on("error", () => end(s));
 
-  for (let i = 0; i < 100 && !fs.existsSync(`/tmp/.X11-unix/X${id}`); i++) { if (s.ended) break; await wait(50); }
-  if (s.ended || !fs.existsSync(`/tmp/.X11-unix/X${id}`)) { end(s); throw new Error("the display for the application could not be started"); }
+  // The display is there when its socket is. Usually within a moment; on a machine whose files
+  // are fetched from the chain as they are read, the first one of a session can take much longer.
+  for (let i = 0; i < 1200 && !fs.existsSync(`/tmp/.X11-unix/X${id}`); i++) { if (s.ended) break; await wait(50); }
+  if (s.ended || !fs.existsSync(`/tmp/.X11-unix/X${id}`)) { s.asked = true; end(s); throw new Error("the display for the application could not be started"); }
 
   const runtime = process.env.XDG_RUNTIME_DIR && fs.existsSync(process.env.XDG_RUNTIME_DIR) ? process.env.XDG_RUNTIME_DIR : fs.mkdtempSync(path.join(os.tmpdir(), "solinux-run-"));
   const env: NodeJS.ProcessEnv = { ...process.env, DISPLAY: display, GDK_BACKEND: "x11", QT_QPA_PLATFORM: "xcb", XDG_SESSION_TYPE: "x11", NO_AT_BRIDGE: "1", XDG_RUNTIME_DIR: runtime };

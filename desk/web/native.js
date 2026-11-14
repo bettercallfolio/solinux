@@ -111,7 +111,10 @@ on("app.closed", (e) => {
 /** Starts an installed application (by the name of its .desktop file) and shows it. */
 export async function launchApp(appId, name, file) {
   const w = Math.min(1100, Math.round(innerWidth * 0.62)), h = Math.min(760, Math.round(innerHeight * 0.66));
+  // (the first application of a session can take a while to come up: say that something is happening)
+  const slow = setTimeout(() => toast(`Starting ${name ?? "the application"}…`), 1500);
   const s = await attempt(() => call("apps.launch", { app: appId, width: w, height: h, scale: density(), ...(file && { file }) }));
+  clearTimeout(slow);
   if (s) show(s);
   else if (name) console.warn(`${name} did not start`);
 }
