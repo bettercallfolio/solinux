@@ -44,13 +44,13 @@ the server listens on this computer only.
 
 | | |
 |---|---|
-| Build system: recipes, pinned sources, packages | Works. |
-| Base system (about 110 packages, kernel 6.18 LTS, systemd) | Being built for the first time. Not yet booted. |
-| Solana layer (Rust, LLVM, Node.js, Agave, Anchor) | Recipes written, not yet built. |
-| Graphics (X libraries, GTK 3, Xvnc), Firefox, Geany | Recipes written, not yet built. |
-| The desktop | Works on a development computer (Ubuntu): windows, terminal, files, the everyday applications, Solana applications, native applications in windows, sharp on dense screens. Not yet tried inside Solinux itself. |
-| `pkg`, the package manager | Works: installs with what is needed, removes, reads repositories from a directory, a web address or Solana (tried on devnet with a test repository). |
-| Published on Solana | Not yet. |
+| Build system: recipes, pinned sources, packages | Works. Every package below was built with it from source. |
+| Base system (100 packages, kernel 6.18 LTS, systemd) | Built. Boots in a virtual machine with its own kernel: about 10 seconds to a shell, all services up. |
+| Solana layer | Built: LLVM 22, Rust 1.97, Node.js 24, Agave 4.3 (command-line tools, validator, test validator), `spl-token`, `cargo build-sbf`, Anchor 1.2. Tried inside Solinux: a Rust program and an Anchor program were created, built and deployed to the local validator. |
+| Graphics and applications | Built: the X libraries, GTK 3, Xvnc, Mesa (OpenGL drawn by the processor), Firefox, Geany. Firefox shows the web inside the desktop, WebGL included. |
+| The desktop | Works inside Solinux. An automatic test goes through a whole session in a real browser (keys, the local validator, a transfer, the explorer, files, terminals, windows, a program from nothing to deployed) and passes. |
+| `pkg`, the package manager | Works. Software installs an application from a repository on Solana devnet in seconds. |
+| Published on Solana | On devnet, under a trial key, while it is being tried: the system, and a repository of extra packages (shells, editors, debuggers, viewers). Not yet under the official publisher. |
 
 Known limits:
 
@@ -58,6 +58,11 @@ Known limits:
   music and video player has sound.
 - There is no office suite yet.
 - Only x86-64 for now.
+- The first `cargo build-sbf` (or `anchor build`) on a system downloads Solana's platform
+  tools from GitHub (about 1.7 GB on disk). They are Solana's own build of Rust for its
+  program format, and the one part of the developer tools that is not built from source here.
+- Graphics are drawn by the processor. That is plenty for a desktop, an editor and the web;
+  it is not for games.
 
 ## The repository
 

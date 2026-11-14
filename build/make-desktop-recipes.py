@@ -182,21 +182,6 @@ install -m755 target/release/cargo-capi target/release/cargo-cbuild target/relea
 meson(n, "librsvg", "2.62.3", "librsvg-2.62.3.tar.xz", "-D introspection=disabled -D docs=disabled -D vala=disabled -D tests=false",
       "Draws SVG pictures: the icons of the desktop's applications are SVG.", before="export CARGO_HOME=$PWD/.cargo-home"); n += 1
 meson(n, "adwaita-icon-theme", "50.0", "adwaita-icon-theme-50.0.tar.xz"); n += 1
-write(n, "desktop-caches", "0.1", "", """
-# Not a package of files from elsewhere: the lists that GTK, GLib and fontconfig read at
-# start-up, made once for everything installed so far.
-install -d "$DEST/usr/share/glib-2.0/schemas" "$DEST/usr/lib/gtk-3.0/3.0.0" "$DEST/usr/share/icons/Adwaita" "$DEST/usr/share/icons/hicolor" "$DEST/var/cache/fontconfig"
-glib-compile-schemas --targetdir="$DEST/usr/share/glib-2.0/schemas" /usr/share/glib-2.0/schemas
-gtk-query-immodules-3.0 > "$DEST/usr/lib/gtk-3.0/3.0.0/immodules.cache"
-gdk-pixbuf-query-loaders > "$DEST/usr/lib/gdk-pixbuf-2.0/2.10.0/loaders.cache" 2>/dev/null || { install -d "$DEST/usr/lib/gdk-pixbuf-2.0/2.10.0"; gdk-pixbuf-query-loaders > "$DEST/usr/lib/gdk-pixbuf-2.0/2.10.0/loaders.cache"; }
-for theme in Adwaita hicolor; do
-  [ -d "/usr/share/icons/$theme" ] || continue
-  gtk-update-icon-cache -q -f "/usr/share/icons/$theme"
-  cp "/usr/share/icons/$theme/icon-theme.cache" "$DEST/usr/share/icons/$theme/"
-done
-fc-cache -f -s
-cp -a /var/cache/fontconfig/. "$DEST/var/cache/fontconfig/" 2>/dev/null || true
-"""); n += 1
 
 # ---- the desktop itself
 write(290, "desk", "0.1.0", "", """
@@ -252,7 +237,8 @@ printf '%s\\n' '[Desktop Entry]' 'Name=Firefox' 'GenericName=Web Browser' 'Comme
 ln -s /usr/lib/firefox/browser/chrome/icons/default/default128.png "$DEST/usr/share/pixmaps/firefox.png"
 """, "Firefox, built from Mozilla's source without its official branding (a distribution's own build).")
 
-# ---- applications: not part of the system's image; they are installed from the repository
+# ---- applications that come with the system
+# (packages that are installed on request are in recipes/extra)
 OUT = os.path.join(HERE, "..", "recipes", "apps")
 os.makedirs(OUT, exist_ok=True)
 n = 300

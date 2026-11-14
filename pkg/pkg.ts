@@ -258,16 +258,22 @@ function inRoot(cmd: string, args: string[]): void {
   if (ROOT === "/") run(cmd, args); else run("chroot", [ROOT, cmd, ...args]);
 }
 
-/** The lists some programs keep about what is installed, brought up to date after a change. */
-function refresh(changed: string[]): void {
-  const touched = (re: RegExp) => changed.some((f) => re.test(f));
+/**
+ * The lists some programs keep about what is installed, brought up to date after a change
+ * (or all of them, for "pkg refresh": a system that was just put together has none yet).
+ */
+function refresh(changed: string[] | null): void {
+  const touched = (re: RegExp) => changed === null || changed.some((f) => re.test(f));
   if (touched(/^usr\/lib\/.*\.so/)) inRoot("ldconfig", []);
   if (touched(/^usr\/share\/glib-2\.0\/schemas\//)) inRoot("glib-compile-schemas", ["/usr/share/glib-2.0/schemas"]);
   if (touched(/^usr\/share\/mime\/packages\//)) inRoot("update-mime-database", ["/usr/share/mime"]);
   if (touched(/^usr\/share\/fonts\//)) inRoot("fc-cache", ["-f"]);
-  const themes = new Set(changed.map((f) => f.match(/^usr\/share\/icons\/([^/]+)\//)?.[1]).filter(Boolean) as string[]);
+  let themes: string[];
+  if (changed === null) { try { themes = fs.readdirSync(path.join(ROOT, "usr/share/icons")).filter((t) => fs.existsSync(path.join(ROOT, "usr/share/icons", t, "index.theme"))); } catch { themes = []; } }
+  else themes = [...new Set(changed.map((f) => f.match(/^usr\/share\/icons\/([^/]+)\//)?.[1]).filter(Boolean) as string[])];
   for (const t of themes) inRoot("gtk-update-icon-cache", ["-q", "-f", "-t", `/usr/share/icons/${t}`]);
   if (touched(/^usr\/lib\/gdk-pixbuf-2\.0\//) && has("gdk-pixbuf-query-loaders")) inRoot("gdk-pixbuf-query-loaders", ["--update-cache"]);
+  if (touched(/^usr\/lib\/gtk-3\.0\//) && has("gtk-query-immodules-3.0")) inRoot("gtk-query-immodules-3.0", ["--update-cache"]);
   if (touched(/^(usr\/lib|etc)\/systemd\/system\//) && ROOT === "/" && fs.existsSync("/run/systemd/system")) run("systemctl", ["daemon-reload"]);
 }
 
@@ -456,6 +462,7 @@ switch (command) {
   case "install": case "add": await install(argv); break;
   case "remove": case "rm": await remove(argv); break;
   case "upgrade": await upgrade(); break;
+  case "refresh": refresh(null); break;   // (used when a system is put together; harmless at any time)
   case "files": {
     const p = installed().get(argv[0] ?? "");
     if (!p) fail(`${argv[0] ?? "that"} is not installed`);

@@ -40,8 +40,15 @@ for stage in "$@"; do
   done
 done
 
-# The list of shared libraries, made by the system's own ldconfig.
+# The lists the system's programs keep about what is installed (shared libraries, icons, fonts,
+# file types, settings), made by the system's own tools for exactly the packages in it.
 sudo chroot "$root" /usr/sbin/ldconfig
+if [ -x "$root/usr/bin/pkg" ]; then
+  sudo mount -t proc proc "$root/proc"
+  sudo chroot "$root" /usr/bin/env -i PATH=/usr/bin:/usr/sbin HOME=/root /usr/bin/pkg refresh || echo "note: the lists could not all be made"
+  sudo umount "$root/proc"
+  # (made with this moment's time: the archive below gives every file the same time anyway)
+fi
 echo "$name: $count packages, $(sudo du -sh "$root" | cut -f1) in $root"
 
 # One archive of the whole system, with the same bytes every time for the same packages.
