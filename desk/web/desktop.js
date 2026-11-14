@@ -16,6 +16,7 @@ import explorer from "./views/explorer.js";
 import wallets from "./views/wallets.js";
 import software from "./views/software.js";
 import { images, media, documents, calculator } from "./views/everyday.js";
+import text from "./views/text.js";
 import settings from "./views/settings.js";
 
 // The desktop's own applications. `tint` colours the icon; w and h are the first size of the window.
@@ -28,6 +29,7 @@ const APPS = [
   { ...wallets, tint: "#e5a98f", w: 900, h: 600 },
   { ...software, tint: "#c9a7e0", w: 940, h: 660 },
   // Everyday applications: in the launcher, and in the dock while they are open.
+  { ...text, tint: "#d7dbdf", w: 820, h: 620, extra: true },
   { ...images, tint: "#8fd0a8", w: 900, h: 640, extra: true },
   { ...media, tint: "#e5a98f", w: 900, h: 600, extra: true },
   { ...documents, tint: "#d9b676", w: 900, h: 760, extra: true },

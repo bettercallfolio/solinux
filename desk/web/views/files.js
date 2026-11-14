@@ -110,6 +110,7 @@ export default {
       menu(anchor, [
         { label: "Open", icon: isDir(e) ? "folder" : "app", run: () => activate(e) },
         !isDir(e) && opener(e.name) && { label: "Open in the editor", icon: "edit", run: () => edit(path) },
+        !isDir(e) && { label: "Open in Text", icon: "edit", run: () => go("text", { path }) },
         !isDir(e) && ARCHIVE.test(e.name) && { label: "Unpack here", icon: "package", run: () => extract(e) },
         { label: "Pack into an archive", icon: "package", run: () => compress(e) },
         isDir(e) && { label: "Terminal here", icon: "terminal", run: () => go("terminal", { cwd: path }) },

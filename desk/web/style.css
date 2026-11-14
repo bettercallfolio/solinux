@@ -370,6 +370,7 @@ code.wrap { overflow-wrap: anywhere; font-size: 12.5px; background: var(--inset)
 .ev-queue button { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 7px; text-align: left; color: var(--dim); min-width: 0; }
 .ev-queue button span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; }
 .ev-queue button:hover { background: var(--hover); color: var(--text); } .ev-queue button.on { background: var(--accent-soft); color: var(--text); }
+.text-area { flex: 1; min-height: 0; resize: none; border: 0 !important; border-radius: 0 !important; outline: none; box-shadow: none !important; background: var(--term-bg) !important; color: var(--term-fg); padding: 16px 18px !important; font-size: 13.5px; line-height: 1.6; tab-size: 4; }
 .ev-frame { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: #fff; }
 @container (max-width: 560px) { .ev-media { grid-template-columns: 1fr; grid-template-rows: 1fr auto; } .ev-queue { border-left: 0; border-top: 1px solid var(--line); max-height: 130px; } }
 .calc { flex: 1; min-height: 0; display: flex; flex-direction: column; padding: 12px; gap: 8px; }
