@@ -100,6 +100,9 @@ autotools(n, "nettle", "4.0", "nettle-4.0.tar.gz", "--prefix=/usr --disable-stat
 meson(n, "xkeyboard-config", "2.48", "xkeyboard-config-2.48.tar.xz", note="The keyboard layouts of the world."); n += 1
 autotools(n, "xkbcomp", "1.5.0", "xkbcomp-1.5.0.tar.xz", XORG); n += 1
 autotools(n, "font-util", "1.4.1", "font-util-1.4.1.tar.xz", XORG, "Build macros for fonts; the display server's build asks for them."); n += 1
+meson(n, "linux-pam", "1.7.2", "Linux-PAM-1.7.2.tar.xz", "-D docs=disabled -D examples=false -D xtests=false -D selinux=disabled -D audit=disabled -D nis=disabled -D logind=disabled -D elogind=disabled -D econf=disabled -D pam_userdb=disabled",
+      note="The display server's build asks for this library. Nothing in the system signs anyone in through it: its one rule refuses every request.",
+      after='install -d "$DEST/etc/pam.d"\nprintf \'%s required pam_deny.so\\n\' auth account password session > "$DEST/etc/pam.d/other"'); n += 1
 write(n, "tigervnc", "1.16.2", "tigervnc-1.16.2.tar.gz", """
 # Only the server (Xvnc) is built: an X display without a screen, whose picture goes out over
 # the VNC protocol. The desktop gives every graphical application one of these.
