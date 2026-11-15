@@ -27,6 +27,8 @@ chainboot run solinux --lazy        # then open the address it prints
   web browser) open in windows of the same desktop.
 - **Applications from packages.** `pkg install <name>`, or the Software application. Packages
   come from a repository that is itself stored on Solana.
+- **On a phone, too.** The desktop fits a small screen, and a bar brings the keys an
+  on-screen keyboard lacks (Esc, Tab, Ctrl, Alt, the arrows).
 - **A kernel of its own.** When Solinux boots as a real system, it runs its own Linux kernel
   with the settings Solana's software asks for built in.
 
@@ -44,6 +46,31 @@ follows.
 Whoever has the desktop's access token can do everything you can do on the system. By default
 the server listens on this computer only.
 
+### On a phone or a tablet
+
+On a small screen every window fills the screen. Desktop applications are not made for a
+screen that narrow, so there they get a display with more room (at least 560 by 400) and
+their picture is fitted to the window: nothing is cut off, and text is somewhat smaller.
+
+On a touch screen a bar appears while a terminal or an application has the focus:
+
+- **Esc, Tab, Ctrl, Alt, the arrows, Home, End, PgUp, PgDn** and a few characters. Ctrl and
+  Alt stay down for the next key (Ctrl, then c, is Ctrl+C).
+- **abc** brings the on-screen keyboard up, also for applications such as Firefox.
+- **pad** turns an application's window into a touchpad: a tap clicks, a tap with two
+  fingers is the right button, two fingers moving scroll, a tap followed by a hold drags.
+
+Without the touchpad, a finger that moves over an application scrolls it, and a long press
+is the right mouse button. Settings turns the bar on or off for good.
+
+### From another computer
+
+The desktop is made to be used on the computer Solinux runs on. To reach it from somewhere
+else, a booted Solinux can listen on the network: set `HOST=0.0.0.0` in
+`/etc/solinux/desk.conf` and restart `solinux-desk`. The connection itself is not encrypted,
+and the token is everything that protects the system. Over the internet, put a web server
+with HTTPS in front of it, and let that server ask for a password.
+
 ## What works today
 
 | | |
@@ -53,7 +80,8 @@ the server listens on this computer only.
 | Solana layer | Built: LLVM 22, Rust 1.97, Node.js 24, Agave 4.3 (command-line tools, validator, test validator), `spl-token`, `cargo build-sbf`, Anchor 1.2. Tried inside Solinux: a Rust program and an Anchor program were created, built and deployed to the local validator. |
 | Graphics and applications | Built: the X libraries, GTK 3, Xvnc, Mesa (OpenGL drawn by the processor), Firefox, Geany. Firefox shows the web inside the desktop, WebGL included. |
 | The desktop | Works inside Solinux. An automatic test goes through a whole session in a real browser (keys, the local validator, a transfer, the explorer, files, terminals, windows, a program from nothing to deployed) and passes. |
-| `pkg`, the package manager | Works. Software installs an application from a repository on Solana devnet in seconds. |
+| `pkg`, the package manager | Works. Software installs an application from a repository on Solana devnet in seconds. `pkg upgrade` brings a system to the repository's versions and leaves alone the settings files under `/etc` that you changed. |
+| On a phone | The desktop and Firefox were tried on emulated phones (390 by 844, 360 by 740, and on their side) through a browser's device mode. **Not yet tried on a real phone.** |
 | Published on Solana | On devnet, in chainboot's official catalog: the system (2.83 GB, 669 MB on chain; a later version sends only what changed), and the package repository (every package of the system, plus extra ones: shells, editors, debuggers, viewers). As a lazy machine, from an empty cache, the desktop answers after 29 to 51 seconds (five runs). |
 
 Known limits:
