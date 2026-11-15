@@ -5,6 +5,76 @@
 import RFB from "./vendor/novnc/core/rfb.js";
 import { el, icon, call, on, toast, session, attempt, menu } from "./core.js";
 import { openWindow, findWindow } from "./wm.js";
+import { registerSink, focusTouchInput } from "./touchkeys.js";
+
+// X key symbols for the keys that have names
+const KEYSYM = { Escape: 0xff1b, Tab: 0xff09, Enter: 0xff0d, Backspace: 0xff08, Delete: 0xffff, ArrowLeft: 0xff51, ArrowUp: 0xff52, ArrowRight: 0xff53, ArrowDown: 0xff54,
+  Home: 0xff50, End: 0xff57, PageUp: 0xff55, PageDown: 0xff56, Insert: 0xff63, F1: 0xffbe, F2: 0xffbf, F3: 0xffc0, F4: 0xffc1, F5: 0xffc2, F6: 0xffc3, F7: 0xffc4, F8: 0xffc5, F9: 0xffc6, F10: 0xffc7, F11: 0xffc8, F12: 0xffc9 };
+const CONTROL = 0xffe3, ALT = 0xffe9;
+/** The X key symbol of a character. */
+const symOf = (ch) => { const c = ch.codePointAt(0); return c < 0x100 ? c : 0x01000000 | c; };
+
+/**
+ * A window as a touchpad: a finger moves the pointer instead of pointing, the way a laptop's
+ * pad does. A tap clicks, two fingers tapped click with the right button, two fingers moved
+ * scroll, a tap followed at once by a touch that stays down drags. For small targets, which
+ * a fingertip covers.
+ */
+function touchpad(stage) {
+  const arrow = el("div", { class: "pad-cursor" });
+  const layer = el("div", { class: "native-pad" }, arrow);
+  let x = 0, y = 0, placed = false;
+  const fingers = new Map();
+  let moved = 0, started = 0, most = 0, lastTap = 0, dragging = false, wheel = 0;
+  const canvas = () => stage.querySelector("canvas");
+  const fire = (type, buttons, more = {}) => {
+    const c = canvas();
+    if (!c) return;
+    const r = stage.getBoundingClientRect();
+    const Kind = type === "wheel" ? WheelEvent : MouseEvent;
+    c.dispatchEvent(new Kind(type, { bubbles: true, cancelable: true, clientX: r.left + x, clientY: r.top + y, buttons, ...more }));
+  };
+  const show = () => { arrow.style.transform = `translate(${x}px, ${y}px)`; };
+  layer.addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+    layer.setPointerCapture(e.pointerId);
+    if (!placed) { x = stage.clientWidth / 2; y = stage.clientHeight / 2; placed = true; show(); }
+    if (!fingers.size) { moved = 0; started = e.timeStamp; most = 0; if (e.timeStamp - lastTap < 320) { dragging = true; fire("mousedown", 1); } }
+    fingers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    most = Math.max(most, fingers.size);
+  });
+  layer.addEventListener("pointermove", (e) => {
+    const f = fingers.get(e.pointerId);
+    if (!f) return;
+    const dx = e.clientX - f.x, dy = e.clientY - f.y;
+    f.x = e.clientX; f.y = e.clientY;
+    moved += Math.abs(dx) + Math.abs(dy);
+    if (fingers.size >= 2) {
+      // two fingers: the wheel (each finger reports the move, so half of it counts)
+      wheel += dy / 2;
+      if (Math.abs(wheel) >= 4) { fire("wheel", 0, { deltaY: -wheel * 3, deltaMode: 0 }); wheel = 0; }
+      return;
+    }
+    // a little faster than the finger, and faster still for long strokes
+    const speed = 1.3 + Math.min(1.2, Math.hypot(dx, dy) / 30);
+    x = Math.max(0, Math.min(stage.clientWidth - 1, x + dx * speed));
+    y = Math.max(0, Math.min(stage.clientHeight - 1, y + dy * speed));
+    show();
+    fire("mousemove", dragging ? 1 : 0);
+  });
+  const up = (e) => {
+    if (!fingers.delete(e.pointerId) || fingers.size) return;
+    if (dragging) { dragging = false; fire("mouseup", 0); lastTap = 0; return; }
+    if (moved < 10 && e.timeStamp - started < 350) {
+      const button = most >= 2 ? 2 : 1;
+      fire("mousedown", button); fire("mouseup", 0);
+      lastTap = most >= 2 ? 0 : e.timeStamp;
+    }
+  };
+  layer.addEventListener("pointerup", up);
+  layer.addEventListener("pointercancel", up);
+  return layer;
+}
 
 const shown = new Map();   // session id -> { win, rfb }
 
@@ -62,6 +132,28 @@ function show(s) {
   });
   win.body.classList.add("native");
   win.body.append(stage, note);
+
+  // On a touch screen: the keys the on-screen keyboard lacks, the on-screen keyboard itself
+  // (an application's picture cannot ask for it), and the window as a touchpad.
+  let pad = null;
+  const press = (sym, mods = {}) => {
+    if (!rfb) return;
+    if (mods.ctrl) rfb.sendKey(CONTROL, "ControlLeft", true);
+    if (mods.alt) rfb.sendKey(ALT, "AltLeft", true);
+    rfb.sendKey(sym, null);
+    if (mods.alt) rfb.sendKey(ALT, "AltLeft", false);
+    if (mods.ctrl) rfb.sendKey(CONTROL, "ControlLeft", false);
+  };
+  const padControl = {
+    get on() { return !!pad; },
+    toggle() { if (pad) { pad.remove(); pad = null; } else { pad = touchpad(stage); stage.append(pad); } },
+  };
+  registerSink(stage, {
+    key(name, mods) { if (KEYSYM[name]) press(KEYSYM[name], mods); },
+    text(chars, mods) { for (const ch of chars) press(symOf(ch), mods); },
+    keyboard() { focusTouchInput(); },
+    pad: padControl,
+  });
 
   function connect() {
     if (!shown.has(s.id)) return;

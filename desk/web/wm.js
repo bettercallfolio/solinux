@@ -17,7 +17,7 @@ export const allWindows = () => [...windows.values()];
 export const focusedWindow = () => focused;
 export const findWindow = (id) => windows.get(id) ?? null;
 
-function area() { const r = desktop().getBoundingClientRect(); return { w: r.width, h: r.height }; }
+function area() { const d = desktop(); watchArea(d); const r = d.getBoundingClientRect(); return { w: r.width, h: r.height }; }
 
 class Win {
   constructor(o) {
@@ -226,7 +226,17 @@ export function cycle(step = 1) {
 }
 
 let resizeTimer = 0;
-window.addEventListener("resize", () => {
+const relayout = () => {
   clearTimeout(resizeTimer);
   resizeTimer = setTimeout(() => { for (const w of windows.values()) { w.fit(); w.apply(); } }, 60);
-});
+};
+window.addEventListener("resize", relayout);
+// The space for windows also changes without the page changing size: the touch keys take a
+// strip of it, an on-screen keyboard takes more.
+let watched = null;
+function watchArea(node) {
+  if (watched === node || typeof ResizeObserver !== "function") return;
+  watched = node;
+  let w = node.clientWidth, h = node.clientHeight;
+  new ResizeObserver(() => { if (node.clientWidth !== w || node.clientHeight !== h) { w = node.clientWidth; h = node.clientHeight; relayout(); } }).observe(node);
+}

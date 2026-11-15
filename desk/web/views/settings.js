@@ -2,6 +2,7 @@
 
 import { el, icon, call, on, attempt, store, facts, copyable, session, bytes, fill } from "../core.js";
 import { state, setCluster, clusterName, refreshConfig } from "../state.js";
+import { touchKeysSetting, setTouchKeys } from "../touchkeys.js";
 
 export default {
   id: "settings", title: "Settings", icon: "settings",
@@ -19,7 +20,10 @@ export default {
       fill(look, el("header", null, el("h2", { text: "Appearance" })),
         el("div", { class: "setting" }, el("div", null, el("b", { text: "Theme" }), el("p", { class: "dim small", text: "Automatic follows your computer." })),
           el("div", { class: "seg" }, [["auto", "Automatic"], ["dark", "Dark"], ["light", "Light"]].map(([v, label]) =>
-            el("button", { class: v === now ? "on" : "", onclick: () => { store.set("theme", v); applyTheme(v); paintLook(); } }, label)))));
+            el("button", { class: v === now ? "on" : "", onclick: () => { store.set("theme", v); applyTheme(v); paintLook(); } }, label)))),
+        el("div", { class: "setting" }, el("div", null, el("b", { text: "Touch keys" }), el("p", { class: "dim small", text: "A bar with Esc, Tab, Ctrl, Alt and the arrows, the on-screen keyboard, and the window as a touchpad. Automatic shows it on touch screens." })),
+          el("div", { class: "seg" }, [["auto", "Automatic"], ["on", "On"], ["off", "Off"]].map(([v, label]) =>
+            el("button", { class: v === touchKeysSetting() ? "on" : "", onclick: () => { setTouchKeys(v); paintLook(); } }, label)))));
     }
 
     function paintCluster() {

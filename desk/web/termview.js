@@ -6,6 +6,22 @@ import { FitAddon } from "./vendor/xterm/addon-fit.mjs";
 import { WebglAddon } from "./vendor/xterm/addon-webgl.mjs";
 import { WebLinksAddon } from "./vendor/xterm/addon-web-links.mjs";
 import { call, on, termSink, termInput, copyText, session } from "./core.js";
+import { withMods } from "./touchkeys.js";
+
+/**
+ * What a terminal receives for a named key (from the touch keys): the same bytes a keyboard
+ * would make it send, with Ctrl and Alt applied.
+ */
+export function keyBytes(term, name, mods = {}) {
+  const plain = { Escape: "\x1b", Tab: "\t", Enter: "\r", Backspace: "\x7f", Delete: "\x1b[3~", PageUp: "\x1b[5~", PageDown: "\x1b[6~" }[name];
+  const moved = { ArrowUp: "A", ArrowDown: "B", ArrowRight: "C", ArrowLeft: "D", Home: "H", End: "F" }[name];
+  let out;
+  if (plain !== undefined) out = name === "Tab" && mods.shift ? "\x1b[Z" : plain;
+  else if (moved) out = mods.ctrl ? `\x1b[1;5${moved}` : `${term.modes.applicationCursorKeysMode ? "\x1bO" : "\x1b["}${moved}`;
+  else return "";
+  return mods.alt ? `\x1b${out}` : out;
+}
+
 
 const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 
@@ -64,7 +80,7 @@ export function termView(parent, id, { readOnly = false, fontSize = 13.5 } = {})
   window.addEventListener("themechange", offTheme);
 
   if (!readOnly) {
-    term.onData((d) => termInput(id, d));
+    term.onData((d) => termInput(id, withMods(d)));
     term.onBinary((d) => termInput(id, Uint8Array.from(d, (c) => c.charCodeAt(0))));
   }
   term.attachCustomKeyEventHandler((e) => {

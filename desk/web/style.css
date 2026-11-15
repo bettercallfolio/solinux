@@ -452,4 +452,21 @@ code.wrap { overflow-wrap: anywhere; font-size: 12.5px; background: var(--inset)
   .launcher { inset: var(--panel-h) 0 0 0; }
   .launch-grid { grid-template-columns: repeat(auto-fill, 96px); }
 }
+/* touch keys: a bar on the dock, or on the on-screen keyboard when that is open */
+.touchbar { position: fixed; left: var(--dock-w); right: 0; bottom: 0; z-index: 70; display: flex; align-items: center; gap: 6px; height: 53px; padding: 6px 8px; background: var(--chrome); border-top: 1px solid var(--line-strong); box-shadow: 0 -6px 18px rgba(0, 0, 0, .12); touch-action: manipulation; }
+html.kbd-open #shell { height: calc(100% - var(--kbd, 0px)); }
+html.kbd-open .touchbar { bottom: var(--kbd, 0px); }
+.tk-scroll { display: flex; gap: 6px; overflow-x: auto; flex: 1; scrollbar-width: none; } .tk-scroll::-webkit-scrollbar { display: none; }
+.tk { flex: none; min-width: 44px; height: 40px; padding: 0 12px; border-radius: 9px; background: var(--raised); border: 1px solid var(--line-strong); color: var(--text); font: 600 14px/1 var(--mono, ui-monospace, monospace); user-select: none; -webkit-user-select: none; }
+.tk:active { background: var(--hover); } .tk.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink, #fff); }
+.tk.kbd, .tk.pad { font-size: 13px; color: var(--accent); } .tk.pad.on { color: var(--accent-ink, #fff); }
+.touch-input { position: absolute; left: 0; bottom: 0; width: 1px; height: 1px; opacity: 0; border: 0; padding: 0; font-size: 16px; pointer-events: none; }
+body.has-touchbar #desktop { margin-bottom: 53px; }
+.native-pad { position: absolute; inset: 0; z-index: 4; touch-action: none; cursor: none; }
+.pad-cursor { position: absolute; left: 0; top: 0; width: 0; height: 0; border-left: 13px solid #fff; border-bottom: 13px solid transparent; filter: drop-shadow(0 0 1.5px #000) drop-shadow(0 1px 1px #000); pointer-events: none; will-change: transform; }
+@media (max-width: 720px) {
+  .touchbar { left: 0; bottom: var(--dock-below, 46px); }
+  /* with the on-screen keyboard open there is little room: the dock steps aside */
+  html.kbd-open #dock { display: none; } html.kbd-open .touchbar { bottom: var(--kbd, 0px); }
+}
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }

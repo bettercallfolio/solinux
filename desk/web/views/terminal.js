@@ -2,7 +2,9 @@
 // the desk somewhere else, and they are still there with their history.
 
 import { el, icon, call, on, attempt, dialog, session, emptyState } from "../core.js";
-import { termView } from "../termview.js";
+import { termView, keyBytes } from "../termview.js";
+import { termInput } from "../core.js";
+import { registerSink } from "../touchkeys.js";
 
 export default {
   id: "terminal", title: "Terminal", icon: "terminal",
@@ -16,6 +18,13 @@ export default {
     let active = null;
     let visible = false;
     let loaded = false;
+
+    // On a touch screen: the keys an on-screen keyboard lacks go to the terminal that is shown.
+    registerSink(root, {
+      key(name, mods) { const t = open_.get(active); if (t) { const bytes = keyBytes(t.view.term, name, mods); if (bytes) termInput(active, bytes); } },
+      text(chars, mods) { if (active === null) return; if (mods.ctrl || mods.alt) { const c = chars.length === 1 && mods.ctrl && /[a-z]/i.test(chars) ? String.fromCharCode(chars.toLowerCase().charCodeAt(0) - 96) : chars; termInput(active, mods.alt ? `\x1b${c}` : c); } else termInput(active, chars); },
+      keyboard() { open_.get(active)?.view.focus(); },
+    });
 
     function label(info) {
       if (info.exited !== null && info.exited !== undefined) return `${info.title} (ended: ${info.exited})`;
