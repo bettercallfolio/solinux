@@ -6,7 +6,8 @@ import { el, icon, store, emit } from "./core.js";
 
 const MIN_W = 340, MIN_H = 220, SNAP = 14;
 const desktop = () => document.getElementById("desktop");
-const narrow = () => matchMedia("(max-width: 720px)").matches;
+/** A small screen (a phone, upright or on its side): windows fill it, there is no room to arrange them. */
+export const narrow = () => matchMedia("(max-width: 720px), (max-height: 560px)").matches;
 
 const windows = new Map();   // id -> Win
 let zTop = 10;

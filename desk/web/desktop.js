@@ -8,6 +8,7 @@ import { state, setCluster, clusterName, refreshConfig } from "./state.js";
 import { palette, registerCommands } from "./palette.js";
 import { openWindow, findWindow, allWindows, focusedWindow, cycle } from "./wm.js";
 import { launchApp, runCommand, restoreSessions, nativeSessions, appIcon } from "./native.js";
+import { touchScreen } from "./touchkeys.js";
 import home from "./views/home.js";
 import terminal from "./views/terminal.js";
 import files from "./views/files.js";
@@ -181,7 +182,9 @@ async function launcher() {
     el("div", { class: "launch-search" }, icon("search", 18), input), grid, note);
   document.body.append(box);
   launcherOpen = box;
-  input.focus();   // (at once: what is typed right away must land here)
+  // (at once: what is typed right away must land here. Not on a touch screen, where it would
+  // bring the on-screen keyboard up over the applications; a tap on the field does that)
+  if (!touchScreen()) input.focus();
   requestAnimationFrame(() => box.classList.add("in"));
 
   let native = [], graphics = { ready: true, missing: [] }, at = 0, shown = [];

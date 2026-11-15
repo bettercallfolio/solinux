@@ -1,4 +1,4 @@
-pkg=desk ver=0.2.0
+pkg=desk ver=0.3.0
 # The Solinux desktop: the server, the page a browser shows, and its two small helpers
 # (one gives a terminal to a command, one arranges the windows of a graphical application).
 build() {

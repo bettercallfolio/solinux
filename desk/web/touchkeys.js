@@ -57,6 +57,8 @@ export function withMods(data) {
 }
 
 function sinkOfFocused() {
+  // (the launcher or a dialog is in front: keys are not for the window behind it)
+  if (document.querySelector("body > .launcher, body > .shade")) return null;
   const w = focusedWindow();
   if (!w || w.minimized) return null;
   for (const [node, sink] of sinks) if (w.el.contains(node) && node.offsetParent !== null) return sink;
@@ -143,4 +145,6 @@ function refresh() {
 export function focusTouchInput() { if (!bar) build(); input.value = " "; input.focus({ preventScroll: true }); }
 
 on("wm", () => queueMicrotask(refresh));
+// (the launcher and dialogs come and go as children of the page)
+new MutationObserver(() => queueMicrotask(refresh)).observe(document.body, { childList: true });
 window.addEventListener("resize", refresh);

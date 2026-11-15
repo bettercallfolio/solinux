@@ -7,7 +7,7 @@ export default {
   create(root, { go }) {
     const name = el("b", { class: "ev-name" });
     const where = el("span", { class: "dim small mono ev-name" });
-    const state = el("span", { class: "dim small" });
+    const state = el("span", { class: "dim small nowrap" });
     const area = el("textarea", { class: "text-area mono", spellcheck: false, autocapitalize: "off", autocomplete: "off", wrap: store.get("text.wrap", true) ? "soft" : "off", placeholder: "Write here.", "aria-label": "Text" });
     const saveBtn = el("button", { class: "btn small primary", onclick: () => save() }, icon("save", 14), "Save");
     const wrapBtn = el("button", { class: "tool", title: "Wrap long lines", onclick: () => { const on = area.wrap === "off"; area.wrap = on ? "soft" : "off"; store.set("text.wrap", on); paint(); } }, icon("logs", 16));

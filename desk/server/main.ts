@@ -21,7 +21,7 @@ import * as packages from "./packages.ts";
 import * as projects from "./projects.ts";
 import net from "node:net";
 
-export const VERSION = "0.2.0";
+export const VERSION = "0.3.0";
 const HERE = path.dirname(new URL(import.meta.url).pathname);
 const WEB = path.join(HERE, "..", "web");
 

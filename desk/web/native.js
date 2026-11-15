@@ -4,8 +4,8 @@
 
 import RFB from "./vendor/novnc/core/rfb.js";
 import { el, icon, call, on, toast, session, attempt, menu } from "./core.js";
-import { openWindow, findWindow } from "./wm.js";
-import { registerSink, focusTouchInput } from "./touchkeys.js";
+import { openWindow, findWindow, narrow } from "./wm.js";
+import { registerSink, focusTouchInput, touchScreen } from "./touchkeys.js";
 
 // X key symbols for the keys that have names
 const KEYSYM = { Escape: 0xff1b, Tab: 0xff09, Enter: 0xff0d, Backspace: 0xff08, Delete: 0xffff, ArrowLeft: 0xff51, ArrowUp: 0xff52, ArrowRight: 0xff53, ArrowDown: 0xff54,
@@ -82,13 +82,65 @@ const shown = new Map();   // session id -> { win, rfb }
  * noVNC shows one pixel of the remote display per unit of the page, which is blurred on a
  * high-density screen. This asks for a display `density` times the size of the window and
  * shows it at 1/density: one remote pixel per pixel of the screen.
+ *
+ * On a small screen (a phone) the window is smaller than desktop applications are made for:
+ * their toolbars and dialogs would be cut off. There the application gets a display with
+ * room (at least ROOM_W by ROOM_H), of the window's proportions, and its picture is shown
+ * smaller, so that all of it is in the window.
  */
-class SharpRFB extends RFB {
-  constructor(target, url, options, density) { super(target, url, options); this.density = density; }
-  _screenSize() { const s = super._screenSize(); const d = this.density ?? 1; return { w: Math.round(s.w * d), h: Math.round(s.h * d) }; }
-  _updateScale() { this._display.scale = 1 / (this.density ?? 1); this._fixScrollbars(); }
+const ROOM_W = 560, ROOM_H = 400, ROOM_MOST = 2;
+/** How many times the window's size an application's display must be to have room. */
+function room(w, h) {
+  if (!narrow() || !w || !h) return 1;
+  return Math.min(ROOM_MOST, Math.max(1, ROOM_W / w, ROOM_H / h));
 }
+class SharpRFB extends RFB {
+  constructor(target, url, options, density) {
+    super(target, url, options);
+    this.density = density;
+    this._screen.style.overflow = "hidden";   // the picture always fits: a scroll bar would only take room from it
+  }
+  // (the size the window gives, not the one on screen: a window that is just opening is
+  // drawn a little smaller for a moment, and that must not become the display's size)
+  _area() { return { w: this._screen.clientWidth, h: this._screen.clientHeight }; }
+  _factor() { const s = this._area(); return (this.density ?? 1) * room(s.w, s.h); }
+  _screenSize() { const s = this._area(); const k = this._factor(); return { w: Math.round(s.w * k), h: Math.round(s.h * k) }; }
+  _updateScale() {
+    const s = this._area();
+    let scale = 1 / this._factor();
+    // (a display that has not taken the size asked for, or cannot, is still shown whole)
+    if (this._fbWidth && this._fbHeight && s.w && s.h) scale = Math.min(scale, s.w / this._fbWidth, s.h / this._fbHeight);
+    this._display.scale = scale;
+    this._fixScrollbars();
+  }
+  /**
+   * On a touch screen a finger that moves scrolls, as it does everywhere else on a phone
+   * (noVNC would press the mouse button and drag: text gets selected, the page stays).
+   * Dragging is done in touchpad mode; a long press is still the right mouse button.
+   */
+  _handleGesture(ev) {
+    if (ev.detail?.type !== "drag" || !touchScreen()) return super._handleGesture(ev);
+    if (ev.type === "gesturestart" || !this._swipe) this._swipe = { x: ev.detail.clientX, y: ev.detail.clientY };
+    const from = this._swipe;
+    if (ev.type === "gestureend") this._swipe = null;
+    return super._handleGesture({ type: ev.type, detail: { type: "twodrag", clientX: from.x, clientY: from.y, magnitudeX: ev.detail.clientX - from.x, magnitudeY: ev.detail.clientY - from.y } });
+  }
+}
+/** The density an application draws with: the screen's, in quarter steps. */
 const density = () => Math.max(1, Math.min(3, Math.round((window.devicePixelRatio || 1) * 4) / 4));
+/**
+ * The first size of an application's display (in units of the page) and its density. On a
+ * small screen the window fills the desktop, and the display is larger than the window (see
+ * room): the density is lowered by as much, in whole steps, so that the application draws
+ * about as many pixels as the screen has.
+ */
+function firstSize() {
+  if (!narrow()) return { width: Math.min(1100, Math.round(innerWidth * 0.62)), height: Math.min(760, Math.round(innerHeight * 0.66)), scale: density() };
+  const r = document.getElementById("desktop").getBoundingClientRect();
+  const w = r.width, h = Math.max(120, r.height - 38 - (document.body.classList.contains("has-touchbar") || !touchScreen() ? 0 : 53));
+  const f = room(w, h);
+  return { width: Math.round(w * f), height: Math.round(h * f), scale: Math.max(1, Math.min(3, Math.ceil((window.devicePixelRatio || 1) / f - 0.1))) };
+}
 
 /** The picture of an application's icon, or a drawn stand-in when it has none. */
 export function appIcon(name, size = 20) {
@@ -202,17 +254,16 @@ on("app.closed", (e) => {
 
 /** Starts an installed application (by the name of its .desktop file) and shows it. */
 export async function launchApp(appId, name, file) {
-  const w = Math.min(1100, Math.round(innerWidth * 0.62)), h = Math.min(760, Math.round(innerHeight * 0.66));
   // (the first application of a session can take a while to come up: say that something is happening)
   const slow = setTimeout(() => toast(`Starting ${name ?? "the application"}…`), 1500);
-  const s = await attempt(() => call("apps.launch", { app: appId, width: w, height: h, scale: density(), ...(file && { file }) }));
+  const s = await attempt(() => call("apps.launch", { app: appId, ...firstSize(), ...(file && { file }) }));
   clearTimeout(slow);
   if (s) show(s);
   else if (name) console.warn(`${name} did not start`);
 }
 
 export async function runCommand(command) {
-  const s = await attempt(() => call("apps.launch", { command, width: 900, height: 600, scale: density() }));
+  const s = await attempt(() => call("apps.launch", { command, ...(narrow() ? firstSize() : { width: 900, height: 600, scale: density() }) }));
   if (s) show(s);
 }
 
