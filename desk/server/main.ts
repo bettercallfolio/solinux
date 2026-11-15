@@ -55,8 +55,10 @@ const TOKEN_FILE = path.join(os.homedir(), ".config", "solinux", "desk-token");
 function loadToken(): string {
   if (flag("no-token")) return "";
   try {
+    // What is in the file is the token: the random one written at the first start, or a
+    // password somebody put there themselves (at least 8 characters, without spaces).
     const t = fs.readFileSync(TOKEN_FILE, "utf8").trim();
-    if (/^[0-9a-f]{32,}$/.test(t)) return t;
+    if (/^[\x21-\x7e]{8,200}$/.test(t)) return t;
   } catch { /* first start */ }
   const t = crypto.randomBytes(24).toString("hex");
   fs.mkdirSync(path.dirname(TOKEN_FILE), { recursive: true, mode: 0o700 });
@@ -65,10 +67,32 @@ function loadToken(): string {
 }
 const TOKEN = loadToken();
 
-function tokenOk(given: unknown): boolean {
+// Wrong tokens are counted per address they come from: after ten in five minutes that address
+// waits five minutes, whatever it sends. (A desktop that the internet can reach will be tried.)
+const failures = new Map<string, { n: number; since: number; blockedUntil: number }>();
+const WINDOW = 5 * 60_000, TRIES = 10;
+function caller(req: http.IncomingMessage): string {
+  // (a proxy on this computer says who it forwards for; nobody else is believed)
+  const direct = req.socket.remoteAddress ?? "";
+  const forwarded = String(req.headers["x-forwarded-for"] ?? "").split(",")[0]!.trim();
+  return forwarded && /^(::ffff:)?(127\.|10\.0\.2\.2$)|^::1$/.test(direct) ? forwarded : direct;
+}
+function tokenOk(given: unknown, req?: http.IncomingMessage): boolean {
   if (!TOKEN) return true;
-  if (typeof given !== "string" || given.length !== TOKEN.length) return false;
-  return crypto.timingSafeEqual(Buffer.from(given), Buffer.from(TOKEN));
+  const who = req ? caller(req) : "", now = Date.now();
+  const f = failures.get(who);
+  if (f && f.blockedUntil > now) return false;
+  const a = Buffer.from(typeof given === "string" ? given : ""), b = Buffer.from(TOKEN);
+  const ok = a.length === b.length && crypto.timingSafeEqual(a, b);
+  if (ok) { failures.delete(who); return true; }
+  if (typeof given === "string" && given !== "") {   // (a page that has no token yet is not an attempt)
+    const cur = f && now - f.since < WINDOW ? f : { n: 0, since: now, blockedUntil: 0 };
+    cur.n++;
+    if (cur.n >= TRIES) { cur.blockedUntil = now + WINDOW; cur.n = 0; cur.since = now; }
+    failures.set(who, cur);
+    if (failures.size > 10_000) for (const [k, v] of failures) if (now - v.since > WINDOW && v.blockedUntil < now) failures.delete(k);
+  }
+  return false;
 }
 
 // ---------------------------------------------------------------- the methods the page can call
@@ -253,7 +277,7 @@ const server = http.createServer(async (req, res) => {
       res.writeHead(200, { "content-type": "application/json" }).end(JSON.stringify({ name: "solinux-desk", version: VERSION, token: !!TOKEN }));
       return;
     }
-    if (!sameSite(req) || !tokenOk(req.headers["x-desk-token"] ?? url.searchParams.get("t"))) {
+    if (!sameSite(req) || !tokenOk(req.headers["x-desk-token"] ?? url.searchParams.get("t"), req)) {
       res.writeHead(401, { "content-type": "application/json" }).end(JSON.stringify({ error: "the access token is missing or wrong" }));
       return;
     }
@@ -342,7 +366,7 @@ function bridge(req: http.IncomingMessage, socket: import("node:stream").Duplex,
 server.on("upgrade", (req, socket, head) => {
   const url = new URL(req.url ?? "/", "http://desk");
   const vnc = url.pathname.match(/^\/vnc\/(\d+)$/);
-  if ((url.pathname !== "/ws" && !vnc) || !sameSite(req) || !tokenOk(url.searchParams.get("t"))) {
+  if ((url.pathname !== "/ws" && !vnc) || !sameSite(req) || !tokenOk(url.searchParams.get("t"), req)) {
     socket.end("HTTP/1.1 401 Unauthorized\r\nConnection: close\r\n\r\n");
     return;
   }
@@ -370,7 +394,7 @@ server.on("error", (e: NodeJS.ErrnoException) => {
 server.on("listening", () => {
   // --shown-host: the name to print when the address people open differs from where the server listens
   const shown = option("shown-host", HOST === "0.0.0.0" || HOST === "::" ? os.hostname() : HOST);
-  const address = `http://${shown}:${port}/${TOKEN ? `#token=${TOKEN}` : ""}`;
+  const address = `http://${shown}:${port}/${TOKEN ? `#token=${encodeURIComponent(TOKEN)}` : ""}`;
   console.log(`Solinux Desk ${VERSION} is running. Open it here:\n\n  ${address}\n`);
   if (HOST !== "127.0.0.1" && HOST !== "localhost" && !TOKEN) console.log("Warning: anyone who can reach this address controls this system. Use the token.");
   // Where the desktop is, for whoever asks later (a new shell prints it).

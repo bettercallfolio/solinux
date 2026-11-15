@@ -95,14 +95,18 @@ export function emit(event, data) { for (const fn of listeners.get(event) ?? [])
 export const session = { token: "", connected: false, hello: null };
 
 function readToken() {
-  const m = location.hash.match(/token=([0-9a-f]+)/);
+  const m = location.hash.match(/token=([^&]+)/);
   if (m) {
-    try { localStorage.setItem("desk-token", m[1]); } catch { /* storage may be off */ }
-    history.replaceState(null, "", location.pathname + location.hash.replace(/#?token=[0-9a-f]+/, "") );
-    return m[1];
+    let token = m[1];
+    try { token = decodeURIComponent(m[1]); } catch { /* as it is */ }
+    try { localStorage.setItem("desk-token", token); } catch { /* storage may be off */ }
+    history.replaceState(null, "", location.pathname + location.hash.replace(/#?token=[^&]+/, ""));
+    return token;
   }
   try { return localStorage.getItem("desk-token") ?? ""; } catch { return ""; }
 }
+/** The token as it goes into an address. */
+export const tokenParam = () => encodeURIComponent(session.token);
 
 let ws = null;
 let nextId = 1;
@@ -117,7 +121,7 @@ export function connect() {
 }
 
 function open() {
-  const url = `${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/ws?t=${session.token}`;
+  const url = `${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/ws?t=${tokenParam()}`;
   ws = new WebSocket(url);
   ws.binaryType = "arraybuffer";
   let opened = false;
@@ -202,7 +206,7 @@ export async function rpc(method, params = [], cluster = "config") {
   return data.result;
 }
 
-export const fileUrl = (path) => `/api/file?path=${encodeURIComponent(path)}&t=${session.token}`;
+export const fileUrl = (path) => `/api/file?path=${encodeURIComponent(path)}&t=${tokenParam()}`;
 
 // ---------------------------------------------------------------- messages
 

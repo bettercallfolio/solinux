@@ -23,7 +23,7 @@ const density = () => Math.max(1, Math.min(3, Math.round((window.devicePixelRati
 /** The picture of an application's icon, or a drawn stand-in when it has none. */
 export function appIcon(name, size = 20) {
   if (!name) return icon("app", size);
-  const img = el("img", { class: "app-img", src: `/api/icon?name=${encodeURIComponent(name)}&t=${session.token}`, width: size, height: size, alt: "", draggable: false });
+  const img = el("img", { class: "app-img", src: `/api/icon?name=${encodeURIComponent(name)}&t=${encodeURIComponent(session.token)}`, width: size, height: size, alt: "", draggable: false });
   const box = el("span", { class: "icon" }, img);
   img.addEventListener("error", () => box.replaceChildren(...icon("app", size).childNodes), { once: true });
   return box;
@@ -65,7 +65,7 @@ function show(s) {
 
   function connect() {
     if (!shown.has(s.id)) return;
-    const url = `${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/vnc/${s.id}?t=${session.token}`;
+    const url = `${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/vnc/${s.id}?t=${encodeURIComponent(session.token)}`;
     rfb = new SharpRFB(stage, url, { shared: true }, s.scale || 1);
     rfb.resizeSession = true;      // the display follows the size of this window
     rfb.scaleViewport = false;

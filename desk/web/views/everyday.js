@@ -17,7 +17,7 @@ export function opener(name) {
   return null;
 }
 
-const shownUrl = (path) => `/api/file?path=${encodeURIComponent(path)}&inline=1&t=${session.token}`;
+const shownUrl = (path) => `/api/file?path=${encodeURIComponent(path)}&inline=1&t=${encodeURIComponent(session.token)}`;
 const dirOf = (path) => path.replace(/\/[^/]+$/, "") || "/";
 const nameOf = (path) => path.split("/").pop();
 
@@ -159,7 +159,7 @@ export const documents = {
     const stage = el("div", { class: "ev-stage" });
     let path = null;
     root.append(el("div", { class: "toolbar" }, icon("file", 15), name, el("span", { class: "gap" }),
-      el("button", { class: "tool", title: "Download", onclick: () => { if (path) { const a = el("a", { href: `/api/file?path=${encodeURIComponent(path)}&t=${session.token}`, download: nameOf(path) }); document.body.append(a); a.click(); a.remove(); } } }, icon("download", 16)),
+      el("button", { class: "tool", title: "Download", onclick: () => { if (path) { const a = el("a", { href: `/api/file?path=${encodeURIComponent(path)}&t=${encodeURIComponent(session.token)}`, download: nameOf(path) }); document.body.append(a); a.click(); a.remove(); } } }, icon("download", 16)),
       el("button", { class: "tool", title: "Show in Files", onclick: () => path && go("files", { path: dirOf(path) }) }, icon("folder", 16))), stage);
     fill(stage, pickFile(go, "document"));
     return {

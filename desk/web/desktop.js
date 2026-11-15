@@ -255,10 +255,10 @@ on("disconnected", () => {
   lostTimer = setTimeout(() => { if (!session.connected) showVeil("Connection lost", "The desktop cannot reach the system. It keeps trying."); }, 1200);
 });
 on("unauthorized", () => {
-  const input = el("input", { type: "password", placeholder: "access token", autocomplete: "off" });
+  const input = el("input", { type: "password", placeholder: "password or token", autocomplete: "current-password" });
   const form = el("form", { class: "token-form", onsubmit: (e) => { e.preventDefault(); try { localStorage.setItem("desk-token", input.value.trim()); } catch { /* ignore */ } location.reload(); } },
     input, el("button", { class: "btn primary", type: "submit" }, "Open"));
-  showVeil("This desktop asks for its token", "Open the address that solinux-desk printed when it started, or paste the token here. It is also in ~/.config/solinux/desk-token on the system.", form);
+  showVeil("This desktop asks for its password", "Type the password of this desktop, or open the address that solinux-desk printed when it started. (On the system it is in ~/.config/solinux/desk-token. After ten wrong tries the desktop does not listen to you for five minutes.)", form);
   input.focus();
 });
 
