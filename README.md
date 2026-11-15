@@ -121,6 +121,7 @@ sources.list  every source archive with its SHA-256
 You need a Linux computer with a compiler, about 60 GB of free disk and patience.
 
 ```sh
+build/check.sh                            # what needs no build: scripts parse, sources are pinned (CI runs this)
 build/all.sh                              # everything, stage after stage; can be started again after a failure
 build/assemble.sh solinux base solana desktop apps   # a root file system and an archive from the packages
 build/try-image.sh solinux start          # runs it on this computer the way chainboot does; prints the desktop's address

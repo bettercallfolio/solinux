@@ -1,0 +1,37 @@
+# What can be checked without building the system (a full build takes many hours and far
+# more disk than a hosted runner has): the scripts, the pins of the sources, the desktop's
+# server and the package manager.
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Scripts parse, sources are pinned, generated recipes are in step
+        run: build/check.sh
+      - name: The package manager starts
+        run: node pkg/pkg.ts help
+      - name: Build the desktop's two helpers
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libx11-dev
+          mkdir -p desk/bin
+          gcc -O2 -Wall -o desk/bin/solinux-pty desk/pty/solinux-pty.c -lutil
+          gcc -O2 -Wall -o desk/bin/solinux-wm desk/wm/solinux-wm.c -lX11
+      - name: The desktop's server answers the way the page expects
+        run: |
+          cd desk
+          node server/main.ts --port 7654 > ../desk.log 2>&1 &
+          for i in $(seq 1 50); do curl -fsS http://127.0.0.1:7654/api/ping > /dev/null 2>&1 && break; sleep 0.2; done
+          node test/smoke.mjs http://127.0.0.1:7654

@@ -1,3 +1,4 @@
 node_modules/
 desk/bin/
 *.log
+__pycache__/
