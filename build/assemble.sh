@@ -30,7 +30,7 @@ for stage in "$@"; do
   for recipe in "$REPO/recipes/$stage"/*.sh; do
     pkg=$(sed -n 's/^pkg=\([^ ]*\).*/\1/p' "$recipe" | head -n1)
     tar=$WORK/packages/$pkg.tar
-    [ -f "$tar" ] || continue          # a recipe that makes no package (a check), or one not built yet
+    [ -f "$tar" ] && [ -s "$WORK/packages/$pkg.files" ] || continue   # a recipe that makes no package (a check), or one not built yet
     sudo tar -C "$root" --keep-directory-symlink --numeric-owner -xpf "$tar"
     sudo install -d "$root/var/lib/solinux/pkg/$pkg"
     sudo install -m644 "$WORK/packages/$pkg.files" "$root/var/lib/solinux/pkg/$pkg/files"

@@ -27,6 +27,8 @@ is_elf() { [ "$(head -c 4 "$1" 2>/dev/null | tr -d '\0')" = $'\177ELF' ]; }
 finish_package() {
   local id=$1 ver=$2 d f
   cd "$DEST"
+  # A recipe that only checks something leaves nothing behind: there is no package to make.
+  if [ -z "$(ls -A .)" ]; then return 0; fi
   for d in bin sbin lib; do
     if [ -d "$d" ] && [ ! -L "$d" ]; then
       mkdir -p "usr/$d"; cp -a "$d"/. "usr/$d"/; rm -rf "$d"

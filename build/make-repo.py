@@ -102,8 +102,8 @@ for stage in stages:
             continue
         name = m.group(1)
         tar = os.path.join(PKG, name + ".tar")
-        if not os.path.exists(tar):
-            continue
+        if not os.path.exists(tar) or not open(os.path.join(PKG, name + ".files")).read().strip():
+            continue          # not built, or a recipe that only checks something and installs nothing
         ver = open(os.path.join(PKG, name + ".version")).read().strip() or "0"
         # the summary: the first comment line under the pkg= line
         lines = text.split("\n")
