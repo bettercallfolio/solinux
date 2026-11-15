@@ -1,4 +1,4 @@
-pkg=pkg ver=0.1.0
+pkg=pkg ver=0.1.1
 # pkg: Solinux's package manager. Packages come from a repository on chain.
 build() {
   install -d "$DEST/usr/lib/solinux/pkg/vendor" "$DEST/usr/bin" "$DEST/etc/solinux" "$DEST/var/lib/solinux/pkg" "$DEST/var/cache/solinux/pkg"

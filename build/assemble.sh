@@ -40,6 +40,14 @@ for stage in "$@"; do
   done
 done
 
+# What each package's settings files (the plain files under /etc) look like as the package
+# brings them. pkg compares against this on an upgrade and leaves alone what somebody changed.
+for dir in "$root"/var/lib/solinux/pkg/*/; do
+  ( cd "$root" && { grep '^etc/' "$dir/files" || true; } | while IFS= read -r f; do
+      if sudo test -f "$f" && ! sudo test -L "$f"; then sudo sha256sum -- "$f"; fi
+    done ) | sudo tee "$dir/config" > /dev/null
+done
+
 # The lists the system's programs keep about what is installed (shared libraries, icons, fonts,
 # file types, settings), made by the system's own tools for exactly the packages in it.
 sudo chroot "$root" /usr/sbin/ldconfig

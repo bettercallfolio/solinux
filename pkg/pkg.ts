@@ -210,6 +210,29 @@ function installed(): Map<string, Installed> {
   return out;
 }
 
+/** The SHA-256 of a plain file, or null when there is none at that path (or something else is). */
+function hashOf(file: string): string | null {
+  try {
+    if (!fs.lstatSync(file).isFile()) return null;
+    return crypto.createHash("sha256").update(fs.readFileSync(file)).digest("hex");
+  } catch { return null; }
+}
+
+/**
+ * The files under /etc as the installed version of a package brought them: path -> SHA-256.
+ * Empty for a package that was installed before pkg kept this record.
+ */
+function configRecord(name: string): Map<string, string> {
+  const out = new Map<string, string>();
+  let text = "";
+  try { text = fs.readFileSync(path.join(DB, name, "config"), "utf8"); } catch { return out; }
+  for (const line of text.split("\n")) {
+    const m = line.match(/^([0-9a-f]{64}) {2}(.+)$/);
+    if (m) out.set(m[2]!, m[1]!);
+  }
+  return out;
+}
+
 // ---------------------------------------------------------------- installing
 
 function needRoot(): void {
@@ -322,8 +345,36 @@ async function install(names: string[]): Promise<void> {
     const files = listing.stdout.split("\n").map((l) => l.replace(/^\.\//, "").replace(/\/$/, "")).filter((l) => l && l !== ".");
     if (files.some((f) => f.startsWith("/") || f.split("/").includes(".."))) fail(`${name}: the archive names a path outside the system. Nothing of it was installed.`);
     const before = have.get(name)?.files ?? [];
+    // An upgrade leaves settings alone that somebody changed: a file under /etc that is not as
+    // the installed version brought it is set aside while the archive is unpacked.
+    const brought = have.has(name) ? configRecord(name) : new Map<string, string>();
+    const aside: string[] = [];
+    if (have.has(name)) for (const f of files) {
+      if (!f.startsWith("etc/")) continue;
+      const mine = hashOf(path.join(ROOT, f));
+      if (mine === null || mine === brought.get(f)) continue;
+      fs.renameSync(path.join(ROOT, f), path.join(ROOT, `${f}.pkg-keep`));
+      aside.push(f);
+    }
     const un = spawnSync("tar", ["-C", ROOT, "--keep-directory-symlink", "--numeric-owner", "-xpf", archive], { encoding: "utf8" });
-    if (un.status !== 0) fail(`${name}: unpacking failed: ${un.stderr.trim().split("\n").pop()}`);
+    if (un.status !== 0) {
+      for (const f of aside) { try { fs.renameSync(path.join(ROOT, `${f}.pkg-keep`), path.join(ROOT, f)); } catch { /* the archive got that far */ } }
+      fail(`${name}: unpacking failed: ${un.stderr.trim().split("\n").pop()}`);
+    }
+    // What this version brings under /etc, for the next upgrade to compare against.
+    const record = files.filter((f) => f.startsWith("etc/")).map((f) => [hashOf(path.join(ROOT, f)), f] as const).filter(([h]) => h !== null);
+    for (const f of aside) {
+      const file = path.join(ROOT, f), kept = `${file}.pkg-keep`;
+      const fresh = hashOf(file), mine = hashOf(kept);
+      if (fresh === null) { fs.renameSync(kept, `${file}.old`); say(`/${f} is no longer a plain file in ${name} ${p.version}; yours is now /${f}.old`, { event: "kept", name, file: `/${f}`, yours: `/${f}.old` }); }
+      else if (fresh === mine) fs.unlinkSync(kept);
+      else if (fresh === brought.get(f)) fs.renameSync(kept, file);   // the package did not change it: yours stays, nothing to say
+      else {
+        fs.renameSync(file, `${file}.new`);
+        fs.renameSync(kept, file);
+        say(`Kept your /${f}. What ${name} ${p.version} brings is in /${f}.new`, { event: "kept", name, file: `/${f}`, theirs: `/${f}.new` });
+      }
+    }
     // An upgrade: what the old version had and the new one does not is taken away.
     const now = new Set(files);
     removeFiles(before.filter((f) => !now.has(f)), ownership(name));
@@ -332,6 +383,7 @@ async function install(names: string[]): Promise<void> {
     fs.writeFileSync(path.join(dir, "files"), files.join("\n") + "\n");
     fs.writeFileSync(path.join(dir, "version"), p.version + "\n");
     fs.writeFileSync(path.join(dir, "set"), p.set + "\n");
+    fs.writeFileSync(path.join(dir, "config"), record.map(([h, f]) => `${h}  ${f}\n`).join(""));
     changed.push(...files, ...before);
   }
   refresh(changed);

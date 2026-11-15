@@ -184,7 +184,7 @@ meson(n, "librsvg", "2.62.3", "librsvg-2.62.3.tar.xz", "-D introspection=disable
 meson(n, "adwaita-icon-theme", "50.0", "adwaita-icon-theme-50.0.tar.xz"); n += 1
 
 # ---- the desktop itself
-write(290, "desk", "0.1.0", "", """
+write(290, "desk", "0.2.0", "", """
 install -d "$DEST/usr/lib/solinux/desk/bin" "$DEST/usr/bin" "$DEST/usr/lib/systemd/system" "$DEST/etc/profile.d" "$DEST/etc/solinux" \\
   "$DEST/etc/systemd/system/multi-user.target.wants"
 cp -r "$REPO/desk/server" "$REPO/desk/web" "$REPO/desk/package.json" "$DEST/usr/lib/solinux/desk/"
