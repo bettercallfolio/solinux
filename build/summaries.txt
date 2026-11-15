@@ -116,7 +116,7 @@ agave: Solana's command-line tools, validator, test validator and ledger tool
 cargo-build-sbf: cargo build-sbf and cargo test-sbf: build and test Solana programs
 spl-token: The command-line tool for tokens
 anchor: The framework most Solana programs are written with
-chainboot: Stores whole systems on Solana and runs them
+chainboot: Stores whole systems on Solana and runs them; makes the chain a remote for git (sol://)
 pkg: Solinux's package manager: installs packages from a repository on chain
 
 # ---- desktop
