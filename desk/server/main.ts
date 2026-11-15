@@ -21,7 +21,7 @@ import * as packages from "./packages.ts";
 import * as projects from "./projects.ts";
 import net from "node:net";
 
-export const VERSION = "0.3.0";
+export const VERSION = "0.3.1";
 const HERE = path.dirname(new URL(import.meta.url).pathname);
 const WEB = path.join(HERE, "..", "web");
 
@@ -274,7 +274,11 @@ const server = http.createServer(async (req, res) => {
       return;
     }
     if (url.pathname === "/api/ping") {
-      res.writeHead(200, { "content-type": "application/json" }).end(JSON.stringify({ name: "solinux-desk", version: VERSION, token: !!TOKEN }));
+      // (a page that could not connect asks here whether its token is the reason: "ok" says so.
+      // A wrong token counts as a wrong try, like everywhere else.)
+      const given = req.headers["x-desk-token"];
+      res.writeHead(200, { "content-type": "application/json" }).end(JSON.stringify({ name: "solinux-desk", version: VERSION, token: !!TOKEN,
+        ...(given !== undefined && sameSite(req) && { ok: tokenOk(given, req) }) }));
       return;
     }
     if (!sameSite(req) || !tokenOk(req.headers["x-desk-token"] ?? url.searchParams.get("t"), req)) {

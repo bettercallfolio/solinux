@@ -153,9 +153,12 @@ function open() {
     for (const w of waiting.values()) w.reject(new Error("the connection to the system was lost"));
     waiting.clear();
     if (was) emit("disconnected");
-    // A socket that never opened usually means the token is wrong; ask the server which it is.
+    // A socket that never opened: the token may be wrong, or the network or the system was
+    // away for a moment (a phone that wakes up, a restart). Only the server knows which, and
+    // the token is asked for again only when the server says that it is not the right one.
     if (!opened) {
-      fetch("/api/ping").then((r) => r.json()).then((p) => { if (p.token) emit("unauthorized"); }).catch(() => {});
+      fetch("/api/ping", { headers: { "x-desk-token": session.token } }).then((r) => r.json())
+        .then((p) => { if (p.token && p.ok !== true) emit("unauthorized"); }).catch(() => {});
     }
     retry = Math.min(retry + 1, 8);
     setTimeout(open, opened ? 400 : 300 * retry);
